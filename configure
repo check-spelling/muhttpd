@@ -6,8 +6,8 @@ mime=yes
 handlers=yes
 setuid=yes
 logging=yes
-prefix=/usr/local
-packagedir='$(PREFIX)/share/$(PACKAGE)-$(VERSION)'
+prefix='/usr/local'
+packagedirsfx='/share/$(PACKAGE)-$(VERSION)'
 sbindir='$(PREFIX)/sbin'
 sysconfdir='$(PACKAGEDIR)/etc'
 need_clearenv=yes
@@ -87,8 +87,9 @@ cat > Makefile.cfg <<EOT
 CFLAGS += $CFLAGS
 LIBS += $LIBS
 
-PREFIX = $prefix
-PACKAGEDIR = $packagedir
+PREFIX = \$(DESTDIR)$prefix
+PACKAGEDIR = \$(PREFIX)$packagedirsfx
+TRUEPACKAGEDIR = $prefix$packagedirsfx
 SBINDIR = $sbindir
 SYSCONFDIR = $sysconfdir
 

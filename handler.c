@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #define BUFSIZE 4096
 
@@ -29,6 +30,7 @@ void invoke_handler(const char *handler, struct request *req) {
 	setenv("SERVER_PROTOCOL", req->proto, 1);
 	setenv("REQUEST_METHOD", req->method, 1);
 	setenv("REQUEST_URI", req->uri, 1);
+	setenv("REMOTE_ADDR", inet_ntoa(req->remote_addr.sin_addr), 1);
 	p = strchr(req->uri, '?');
 	if(p) {
 		setenv("SCRIPT_NAME", strndup(req->uri, p - req->uri), 1);

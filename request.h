@@ -1,5 +1,7 @@
 #ifndef REQUEST_H
 #define REQUEST_H
+#include <sys/types.h>
+#include <netinet/in.h>
 
 struct request {
 	char *buf;
@@ -10,6 +12,7 @@ struct request {
 	char *filename;
 	char *location;
 	struct file_type *file_type;
+	struct sockaddr_in remote_addr;
 };
 
 void handle_request(struct request *req);

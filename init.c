@@ -55,7 +55,7 @@ void init(int argc, char **argv) {
 
 	/* Set up the environment */
 	clearenv();
-	setenv("SERVER_SOFTWARE", "muhttpd/0.9", 1);
+	setenv("SERVER_SOFTWARE", "muhttpd/0.10", 1);
 	setenv("DOCUMENT_ROOT", config->webdir, 1);
 
 	sock = tcp_listen(config->port);

@@ -1,5 +1,5 @@
 PACKAGE = muhttpd
-VERSION = 0.9.9
+VERSION = 0.10.0
 
 include Makefile.cfg
 
@@ -31,14 +31,16 @@ install : all
 	then \
 		for i in $(PACKAGEDIR)/sbin/*; \
 		do \
-			ln -s "$$i" $(SBINDIR)/`basename "$$i"`; \
+			name=`basename "$$i"`; \
+			ln -s "$(TRUEPACKAGEDIR)/sbin/$$name" "$(SBINDIR)/$$name"; \
 		done; \
 	fi
 	if [ ! $(PACKAGEDIR)/etc = $(SYSCONFDIR) ]; \
 	then \
 		for i in $(PACKAGEDIR)/etc/*; \
 		do \
-			ln -s "$$i" $(SYSCONFDIR)/`basename "$$i"`; \
+			name=`basename "$$i"`; \
+			ln -s "$(TRUEPACKAGEDIR)/etc/$$name" "$(SYSCONFDIR)/$$name"; \
 		done; \
 	fi
 	

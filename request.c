@@ -276,9 +276,13 @@ static int read_request(char *buf, size_t len) {
 void serve() {
 	char buf[BUFSIZE], *p;
 	struct request req;
+	socklen_t salen;
 	int n;
 
 	memset(&req, 0, sizeof(req));
+
+	/* Get address of client */
+	getpeername(0, (struct sockaddr*) &(req.remote_addr), &salen);
 
 	n = read_request(buf, BUFSIZE);
 	if(n) {
