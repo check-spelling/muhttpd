@@ -1,0 +1,99 @@
+#! /bin/sh
+
+# Defaults
+cgi=yes
+mime=yes
+handlers=yes
+setuid=yes
+logging=yes
+prefix=/usr/local
+packagedir='$(PREFIX)/share/$(PACKAGE)-$(VERSION)'
+sbindir='$(PREFIX)/sbin'
+sysconfdir='$(PACKAGEDIR)/etc'
+need_clearenv=yes
+need_strndup=yes
+need_libgen=no
+
+# Command line options override defaults
+while [ ! "$1." = '.' ]
+do
+	case $1 in
+	--disable-cgi)
+		cgi=no
+	;;
+	--disable-mime)
+		mime=no
+		handlers=no
+	;;
+	--disable-handlers)
+		handlers=no
+	;;
+	--disable-setuid)
+		setuid=no
+	;;
+	--disable-logging)
+		logging=no
+	;;
+	--with-libgen)
+		need_libgen=yes
+	;;
+	--prefix)
+		shift
+		prefix=$1
+	;;
+	--packagedir)
+		shift
+		packagedir=$1
+	;;
+	--sbindir)
+		shift
+		sbindir=$1
+	;;
+	--sysconfdir)
+		shift
+		sysconfdir=$1
+	;;
+	*)
+		echo 'Unknown option: ' $1
+	;;
+	esac
+	shift
+done 
+
+# Print summary
+echo "CGI Support:	$cgi"
+echo "MIME Types:	$mime"
+echo "Handlers:	$handlers"
+echo "Set uid/gid:	$setuid"
+echo "Logging:	$logging"
+
+# Select objects to be compiled in
+objects='main.o init.o socket.o request.o status.o config.o globals.o'
+
+[ $need_strndup = 'yes' ] && objects="$objects strndup.o"
+[ $need_clearenv = 'yes' ] && objects="$objects clearenv.o"
+[ $mime = 'yes' ] && objects="$objects type.o"
+[ $cgi = 'yes' -o $handlers = 'yes' ] && objects="$objects handler.o"
+[ $logging = 'yes' ] && objects="$objects log.o"
+
+# Generate configuration files
+if [ $cgi = 'yes' ]; then CFLAGS="$CFLAGS -DENABLE_CGI"; fi
+if [ $handlers = 'yes' ]; then CFLAGS="$CFLAGS -DENABLE_HANDLERS"; fi
+if [ $mime = 'no' ]; then CFLAGS="$CFLAGS -DDISABLE_MIME"; fi
+[ $setuid = 'no' ] && CFLAGS="$CFLAGS -DDISABLE_SETUID"
+[ $logging = 'yes' ] && CFLAGS="$CFLAGS -DENABLE_LOGGING"
+[ $need_libgen = 'yes' ] && LIBS="$LIBN -lgen"
+cat > Makefile.cfg <<EOT
+CFLAGS += $CFLAGS
+LIBS += $LIBS
+
+PREFIX = $prefix
+PACKAGEDIR = $packagedir
+SBINDIR = $sbindir
+SYSCONFDIR = $sysconfdir
+
+OBJECTS = $objects
+EOT
+
+echo
+echo 'Run make to build muhttpd'
