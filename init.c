@@ -8,6 +8,8 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 extern SOCKET sock;	/* from main.c */
 
@@ -19,6 +21,10 @@ static void sighandler(int num) {
 void init(int argc, char **argv) {
 	char *config_file = "/etc/muhttpd/muhttpd.conf";
 	int i;
+	pid_t pid;
+	FILE *pidfile;
+	time_t t;
+	struct tm *tm;
 
 	/* Catch segfaults */
 	signal(SIGSEGV, sighandler);
@@ -64,6 +70,21 @@ void init(int argc, char **argv) {
 		exit(1);
 	}
 
+	/* Background */
+	pid = fork();
+	if(pid < 0) {
+		perror("fork");
+		exit(1);
+	} else if(pid) exit;
+
+	/* Write pidfile */
+	pidfile = fopen(config->pidfile, "w");
+	if(fprintf(pidfile, "%d\n", getpid()) < 0) {
+		perror(config->pidfile);
+		fputs("WARNING: Could not write pidfile\n", stderr);
+	}
+	fclose(pidfile);
+
 #ifndef DISABLE_SETUID
 	/* Set user id and group id */
 	if(config->gid) {
@@ -87,4 +108,10 @@ void init(int argc, char **argv) {
 	if(!getuid()) fputs("WARNING: Running as r00t\n",
 		stderr);
 #endif /* !DISABLE_SETUID */
+
+	/* Detach */
+	close(0);
+	close(1);
+	close(2);
+	pid = setsid();
 }

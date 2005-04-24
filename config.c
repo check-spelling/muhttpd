@@ -121,6 +121,23 @@ static struct muhttpd_config *logfile_directive(char *line,
 }
 #endif /* ENABLE_LOGGING */
 
+static struct muhttpd_config *pidfile_directive(char *line, struct muhttpd_config *config) {
+	char *tok;
+
+	tok = get_next_token(&line);
+	if(!tok) {
+		fputs("ERROR: Invalid token in pidfile directive\n", stderr);
+		return NULL;
+	}
+
+	config->pidfile = tok;
+
+	if(get_next_token(&line))
+		fputs("WARNING: Stray token after pidfile directive\n", stderr);
+
+	return config;
+}
+
 /** Parse configuration line and update configuration */
 static struct muhttpd_config *parse_config_line(char *line,
 	struct muhttpd_config *config) {
@@ -294,6 +311,8 @@ static struct muhttpd_config *parse_config_line(char *line,
 	} else if(!strcmp(tok, "logfile")) {
 		return logfile_directive(line, config);
 #endif
+	} else if(!strcmp(tok, "pidfile")) {
+		return pidfile_directive(line, config);
 	} else {
 		fprintf(stderr, "ERROR: Configuration directive \"%s\" not "
 			"understood\n", tok);
@@ -369,6 +388,7 @@ struct muhttpd_config *get_default_config() {
 #ifdef ENABLE_LOGGING
 	config->logfile = NULL;
 #endif
+	config->pidfile = "/var/run/muhttpd.pid";
 
 	return config;
 }
