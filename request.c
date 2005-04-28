@@ -1,3 +1,4 @@
+#include "flags.h"
 #include "request.h"
 #if defined(ENABLE_HANDLERS) || defined(ENABLE_CGI)
 #include "handler.h"

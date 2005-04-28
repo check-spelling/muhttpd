@@ -6,6 +6,8 @@ mime=yes
 handlers=yes
 setuid=yes
 logging=yes
+pidfile=yes
+background=yes
 prefix='/usr/local'
 packagedirsfx='/share/$(PACKAGE)-$(VERSION)'
 sbindir='$(PREFIX)/sbin'
@@ -34,6 +36,30 @@ do
 	--disable-logging)
 		logging=no
 	;;
+	--disable-pidfile)
+		pidfile=no
+	;;
+	--disable-background)
+		background=no
+	;;
+	--disable-everything)
+		mime=no
+		cgi=no
+		handlers=no
+		setuid=no
+		logging=no
+		pidfile=no
+		background=no
+	;;
+	--enable-everything)
+		mime=yes
+		cgi=yes
+		handlers=yes
+		setuid=yes
+		logging=yes
+		pidfile=yes
+		background=yes
+	;;
 	--with-libgen)
 		need_libgen=yes
 	;;
@@ -61,11 +87,14 @@ do
 done 
 
 # Print summary
-echo "CGI Support:	$cgi"
+echo "Features:"
 echo "MIME Types:	$mime"
+echo "CGI Support:	$cgi"
 echo "Handlers:	$handlers"
 echo "Set uid/gid:	$setuid"
 echo "Logging:	$logging"
+echo "Pidfile:	$pidfile"
+echo "Backgrounding:	$background"
 
 # Select objects to be compiled in
 objects='main.o init.o socket.o request.o status.o config.o globals.o'
@@ -76,13 +105,9 @@ objects='main.o init.o socket.o request.o status.o config.o globals.o'
 [ $cgi = 'yes' -o $handlers = 'yes' ] && objects="$objects handler.o"
 [ $logging = 'yes' ] && objects="$objects log.o"
 
-# Generate configuration files
-if [ $cgi = 'yes' ]; then CFLAGS="$CFLAGS -DENABLE_CGI"; fi
-if [ $handlers = 'yes' ]; then CFLAGS="$CFLAGS -DENABLE_HANDLERS"; fi
-if [ $mime = 'no' ]; then CFLAGS="$CFLAGS -DDISABLE_MIME"; fi
-[ $setuid = 'no' ] && CFLAGS="$CFLAGS -DDISABLE_SETUID"
-[ $logging = 'yes' ] && CFLAGS="$CFLAGS -DENABLE_LOGGING"
+## Generate Makefile.cfg
 [ $need_libgen = 'yes' ] && LIBS="$LIBN -lgen"
+
 cat > Makefile.cfg <<EOT
 CFLAGS += $CFLAGS
 LIBS += $LIBS
@@ -95,6 +120,18 @@ SYSCONFDIR = $sysconfdir
 
 OBJECTS = $objects
 EOT
+
+## Generate flags.h
+cat > flags.h <<EOT
+/* Compile time options */
+EOT
+[ $cgi = 'yes' ] && echo "#define ENABLE_CGI" >> flags.h
+[ $handlers = 'yes' ] && echo "#define ENABLE_HANDLERS" >> flags.h
+[ $mime = 'no' ] && echo "#define DISABLE_MIME" >> flags.h
+[ $setuid = 'no' ] && echo "#define DISABLE_SETUID" >> flags.h
+[ $logging = 'yes' ] && echo "#define ENABLE_LOGGING" >> flags.h
+[ $pidfile = 'yes' ] && echo "#define ENABLE_PIDFILE" >> flags.h
+[ $background = 'yes' ] && echo "#define ENABLE_BACKGROUND" >> flags.h
 
 echo
 echo 'Run make to build muhttpd'

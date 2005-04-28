@@ -1,3 +1,4 @@
+#include "flags.h"
 #define CONFIG_C
 #include "config.h"
 #include "memory.h"
@@ -11,6 +12,10 @@
 
 #ifndef PATH_MAX
 #define PATH_MAX 255
+#endif
+
+#ifndef PIDFILE
+#define PIDFILE "/var/run/muhttpd.pid"
 #endif
 
 struct muhttpd_config *current_config = NULL;
@@ -121,6 +126,7 @@ static struct muhttpd_config *logfile_directive(char *line,
 }
 #endif /* ENABLE_LOGGING */
 
+#ifdef ENABLE_PIDFILE
 static struct muhttpd_config *pidfile_directive(char *line, struct muhttpd_config *config) {
 	char *tok;
 
@@ -137,6 +143,7 @@ static struct muhttpd_config *pidfile_directive(char *line, struct muhttpd_confi
 
 	return config;
 }
+#endif /* ENABLE_PIDFILE */
 
 /** Parse configuration line and update configuration */
 static struct muhttpd_config *parse_config_line(char *line,
@@ -311,8 +318,19 @@ static struct muhttpd_config *parse_config_line(char *line,
 	} else if(!strcmp(tok, "logfile")) {
 		return logfile_directive(line, config);
 #endif
+#ifdef ENABLE_PIDFILE
 	} else if(!strcmp(tok, "pidfile")) {
 		return pidfile_directive(line, config);
+	} else if(!strcmp(tok, "nopidfile")) {
+		config->pidfile = NULL;
+		return config;
+#endif
+#ifdef ENABLE_BACKGROUND
+	} else if(!strcmp(tok, "background")) {
+		config->background = 1;
+	} else if(!strcmp(tok, "foreground")) {
+		config->background = 0;
+#endif
 	} else {
 		fprintf(stderr, "ERROR: Configuration directive \"%s\" not "
 			"understood\n", tok);
@@ -388,7 +406,9 @@ struct muhttpd_config *get_default_config() {
 #ifdef ENABLE_LOGGING
 	config->logfile = NULL;
 #endif
-	config->pidfile = "/var/run/muhttpd.pid";
+#ifdef ENABLE_PIDFILE
+	config->pidfile = PIDFILE;
+#endif
 
 	return config;
 }

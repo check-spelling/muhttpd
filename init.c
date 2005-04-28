@@ -1,3 +1,4 @@
+#include "flags.h"
 #include "socket.h"
 #include "type.h"
 #include "config.h"
@@ -11,6 +12,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifndef CONFIGFILE
+#define CONFIGFILE "/etc/muhttpd/muhtppd.conf"
+#endif
+
 extern SOCKET sock;	/* from main.c */
 
 static void sighandler(int num) {
@@ -19,12 +24,12 @@ static void sighandler(int num) {
 }
 
 void init(int argc, char **argv) {
-	char *config_file = "/etc/muhttpd/muhttpd.conf";
+	char *config_file = CONFIGFILE;
 	int i;
+#ifdef ENABLE_PIDFILE
 	pid_t pid;
 	FILE *pidfile;
-	time_t t;
-	struct tm *tm;
+#endif
 
 	/* Catch segfaults */
 	signal(SIGSEGV, sighandler);
@@ -70,13 +75,16 @@ void init(int argc, char **argv) {
 		exit(1);
 	}
 
+#ifdef ENABLE_BACKGROUND
 	/* Background */
 	pid = fork();
 	if(pid < 0) {
 		perror("fork");
 		exit(1);
 	} else if(pid) exit;
+#endif
 
+#ifdef ENABLE_PIDFILE
 	/* Write pidfile */
 	pidfile = fopen(config->pidfile, "w");
 	if(fprintf(pidfile, "%d\n", getpid()) < 0) {
@@ -84,6 +92,7 @@ void init(int argc, char **argv) {
 		fputs("WARNING: Could not write pidfile\n", stderr);
 	}
 	fclose(pidfile);
+#endif
 
 #ifndef DISABLE_SETUID
 	/* Set user id and group id */
@@ -113,5 +122,5 @@ void init(int argc, char **argv) {
 	close(0);
 	close(1);
 	close(2);
-	pid = setsid();
+	setsid();
 }

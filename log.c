@@ -1,3 +1,4 @@
+#include "flags.h"
 #include "config.h"
 #include "log.h"
 #include <time.h>

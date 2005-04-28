@@ -23,7 +23,12 @@ struct muhttpd_config {
 #ifdef ENABLE_LOGGING
 	FILE *logfile;
 #endif
+#ifdef ENABLE_PIDFILE
 	char *pidfile;
+#endif
+#ifdef ENABLE_BACKGROUND
+	int background;
+#endif
 };
 
 struct muhttpd_config *read_config_file(const char *file,

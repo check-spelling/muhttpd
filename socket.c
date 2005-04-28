@@ -1,3 +1,4 @@
+#include "flags.h"
 #include "socket.h"
 #include <sys/socket.h>
 #include <netinet/in.h>

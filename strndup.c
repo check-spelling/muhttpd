@@ -1,3 +1,4 @@
+#include "flags.h"
 #include "strndup.h"
 #include <stdlib.h>
 #include <string.h>

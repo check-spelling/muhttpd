@@ -1,3 +1,4 @@
+#include "flags.h"
 #include "status.h"
 #include <stdio.h>
 

@@ -10,7 +10,7 @@ all : $(TARGETS)
 muhttpd : $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LIBS)
 
-%.o : %.c
+%.o : %.c flags.h
 	$(CC) $(CFLAGS) -c $<
 
 clean :

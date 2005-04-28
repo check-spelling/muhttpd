@@ -1,3 +1,4 @@
+#include "flags.h"
 #include <stdlib.h>
 
 int clearenv(void) {

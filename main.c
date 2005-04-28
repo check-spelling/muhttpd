@@ -1,3 +1,4 @@
+#include "flags.h"
 #include "socket.h"
 #include "status.h"
 #include "init.h"

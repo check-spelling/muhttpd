@@ -1,3 +1,4 @@
+#include "flags.h"
 #include "type.h"
 #include "config.h"
 #include "memory.h"

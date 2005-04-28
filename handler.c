@@ -1,3 +1,4 @@
+#include "flags.h"
 #include "globals.h"
 #ifdef ENABLE_LOGGING
 #include "log.h"
