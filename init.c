@@ -13,7 +13,7 @@
 #include <unistd.h>
 
 #ifndef CONFIGFILE
-#define CONFIGFILE "/etc/muhttpd/muhtppd.conf"
+#define CONFIGFILE "/etc/muhttpd/muhttpd.conf"
 #endif
 
 extern SOCKET sock;	/* from main.c */
@@ -66,7 +66,7 @@ void init(int argc, char **argv) {
 
 	/* Set up the environment */
 	clearenv();
-	setenv("SERVER_SOFTWARE", "muhttpd/0.10", 1);
+	setenv("SERVER_SOFTWARE", "muhttpd/0.11", 1);
 	setenv("DOCUMENT_ROOT", config->webdir, 1);
 
 	sock = tcp_listen(config->port);

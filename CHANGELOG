@@ -1,8 +1,20 @@
+2005-06-02	Inglorion	Split install target into install-package,
+				install-bin, install-etc and install-man
+
+2005-06-02	Inglorion	Added manpage muhttpd.conf.5
+
+2005-06-01	Inglorion	Added manpage muhttpd.8
+
+2005-06-01	Inglorion	Install configuration files to $(SYSCONFDIR)
+
+2005-06-01	Inglorion	Added more options to configure script
+
+2005-06-01	Inglorion	Added README and INSTALL
+
 2005-03-18	Inglorion	0.10.0 Released
 
 2005-03-18	Inglorion	Added $(DESTDIR) to PREFIX
 				This facilitates installing to a fake root
-				(as used by the OpenBSD ports system)
 
 2005-03-18	Inglorion	Added REMOTE_ADDR CGI variable
 

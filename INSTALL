@@ -1,0 +1,78 @@
+Quick Start
+
+Basically, building and installation is as simple as:
+
+./configure
+make
+make install
+
+This will build muhttpd with all features enabled, and install to 
+/usr/local. The rest of this document discusses how to customize building
+and installation.
+
+Configuration
+
+The configure script accepts the following options:
+
+--prefix <path>
+	Use <path> as the installation prefix (default: /usr/local)
+
+--disable-<feature>
+	Do not include <feature>. <feature> can be one of background, cgi,
+	handlers, logging, mime, pidfile, and setuid. handlers requires mime.
+
+--enable-<feature>
+	Include <feature>. See --disable-<feature> for more info.
+
+--disable-all
+	Disable all features. Individual features can still be enabled 
+	with --enable-<feature>.
+
+--enable-all
+	Enable all features. Individual features can be disabled with
+	--disable-feature.
+
+--with-clearenv
+	Use the included clearenv implementation. This is required on 
+	systems that do not provide the clearenv function. It is 
+	enabled by default, as it is mostly harmless on systems that do 
+	provide clearenv.
+
+--without-clearenv
+	Do not use the included clearenv implementation. On systems that 
+	provide clearenv, this can be used to generate a slightly smaller 
+	muhttpd binay
+
+--with-libgen
+	Link against libgen. This is required on Cygwin, which does not 
+	provide basename and dirname as part of the C library.
+
+--without-libgen
+	Do not link aganist libgen. This is the default, as most systems 
+	provide the required functionality in libc.
+
+--with-strndup
+	Use the included strndup implementation. This is enabled by 
+	default, because strndup is not a standard function and most C 
+	libraries do not provide it.
+
+--without-strndup
+	Do not use the included strndup implementation. This can be used 
+	to create a slightly smaller muhttpd binary on systems that 
+	provide strndup, such as GNU systems.
+
+Compiling
+
+To start compilation, type make. Both GNU make and BSD make should work, 
+other versions of make may not work.
+
+Installing
+
+To perform a regular installation, type make install. You can modify the 
+installation prefix by setting the PREFIX environment variable. E.g.
+
+env PREFIX=./fake make install
+
+installs muhttpd to ./fake instead of the prefix specified to configure. 
+This can be used for staging installs, as performed by many packaging 
+systems.

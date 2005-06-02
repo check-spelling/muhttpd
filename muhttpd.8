@@ -1,0 +1,33 @@
+.TH muhttpd 8 2005-06-01
+.SH NAME
+.B muhttpd
+\-
+simple yet versatile webserver
+.SH SYNOPSIS
+\fBmuhttpd\fR [\fB-c\fR \fIconffile\fR]
+.SH DESCRIPTION
+\fBmuhttpd\fR (mu HTTP deamon) is a simple but versatile web server written in 
+portable ANSI C. It supports static pages, CGI scripts, and MIME type 
+based handlers. It drops privileges before accepting any connections, and 
+it can log received requests. Development emphasis is on simplicity, 
+small size, and security. It has been tested on GNU/Linux, OpenBSD, NetBSD, 
+FreeBSD, Mac OS X, and Cygwin. It compiles and runs on 32 bits and 64 
+bits, little endian and big endian systems.
+
+Various features can be disabled at compile time, making the resulting 
+binary even simpler, smaller, and probably more secure.
+
+\fBmuhttpd\fR has seen rapid development in early 2004, and is now a very 
+stable product.
+.SH OPTIONS
+.TP
+\fB-c\fR \fIconffile\fR
+Use \fIconffile\fR as the configuration file.
+.SH SEE ALSO
+muhttpd.conf(5)
+.SH NOTES
+\fBmuhttpd\fR does not implement the full CGI standard. This is intentional,
+as some features are rarely used and would only add size and complexity.
+.SH AUTHOR
+\fBmuhttpd\fR was written by Robbert Haarman.
+See \fIhttp://inglorion.net/\fR for contact information.

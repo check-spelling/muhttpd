@@ -11,7 +11,8 @@ background=yes
 prefix='/usr/local'
 packagedirsfx='/share/$(PACKAGE)-$(VERSION)'
 sbindir='$(PREFIX)/sbin'
-sysconfdir='$(PACKAGEDIR)/etc'
+sysconfdir='/etc'
+mandir='$(PREFIX)/share/man'
 need_clearenv=yes
 need_strndup=yes
 need_libgen=no
@@ -23,24 +24,46 @@ do
 	--disable-cgi)
 		cgi=no
 	;;
+	--enable-cgi)
+		cgi=yes
+	;;
 	--disable-mime)
 		mime=no
 		handlers=no
 	;;
+	--enable-mime)
+		mime=yes
+	;;
 	--disable-handlers)
 		handlers=no
+	;;
+	--enable-handlers)
+		handlers=yes
+		mime=yes
 	;;
 	--disable-setuid)
 		setuid=no
 	;;
+	--enable-setuid)
+		setuid=yes
+	;;
 	--disable-logging)
 		logging=no
+	;;
+	--enable-logging)
+		logging=yes
 	;;
 	--disable-pidfile)
 		pidfile=no
 	;;
+	--enable-pidfile)
+		pidfile=yes
+	;;
 	--disable-background)
 		background=no
+	;;
+	--enable-background)
+		background=yes
 	;;
 	--disable-everything)
 		mime=no
@@ -60,8 +83,23 @@ do
 		pidfile=yes
 		background=yes
 	;;
+	--with-clearenv)
+		need_clearenv=yes
+	;;
+	--without-clearenv)
+		need_clearenv=no
+	;;
 	--with-libgen)
 		need_libgen=yes
+	;;
+	--without-libgen)
+		need_libgen=no
+	;;
+	--with-strndup)
+		need_strndup=yes
+	;;
+	--without-strndup)
+		need_strndup=no
 	;;
 	--prefix)
 		shift
@@ -79,8 +117,13 @@ do
 		shift
 		sysconfdir=$1
 	;;
+	--help)
+		echo "See the file INSTALL for options"
+		exit
+	;;
 	*)
 		echo 'Unknown option: ' $1
+		exit 128
 	;;
 	esac
 	shift
@@ -106,17 +149,19 @@ objects='main.o init.o socket.o request.o status.o config.o globals.o'
 [ $logging = 'yes' ] && objects="$objects log.o"
 
 ## Generate Makefile.cfg
-[ $need_libgen = 'yes' ] && LIBS="$LIBN -lgen"
+[ $need_libgen = 'yes' ] && LIBS="$LIBS -lgen"
 
 cat > Makefile.cfg <<EOT
 CFLAGS += $CFLAGS
 LIBS += $LIBS
 
-PREFIX = \$(DESTDIR)$prefix
-PACKAGEDIR = \$(PREFIX)$packagedirsfx
-TRUEPACKAGEDIR = $prefix$packagedirsfx
-SBINDIR = $sbindir
-SYSCONFDIR = $sysconfdir
+PREFIX ?= \$(DESTDIR)$prefix
+PACKAGEDIR ?= \$(PREFIX)$packagedirsfx
+TRUEPREFIX ?= $prefix
+TRUEPACKAGEDIR ?= \$(TRUEPREFIX)$packagedirsfx
+SBINDIR ?= $sbindir
+SYSCONFDIR ?= \$(DESTDIR)$sysconfdir
+MANDIR ?= $mandir
 
 OBJECTS = $objects
 EOT
@@ -132,6 +177,7 @@ EOT
 [ $logging = 'yes' ] && echo "#define ENABLE_LOGGING" >> flags.h
 [ $pidfile = 'yes' ] && echo "#define ENABLE_PIDFILE" >> flags.h
 [ $background = 'yes' ] && echo "#define ENABLE_BACKGROUND" >> flags.h
+echo "#define CONFIGFILE \"${sysconfdir}/muhttpd/muhttpd.conf\"" >> flags.h
 
 echo
 echo 'Run make to build muhttpd'

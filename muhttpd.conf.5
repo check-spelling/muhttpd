@@ -1,0 +1,63 @@
+.TH muhttpd.conf 5 2005-06-02
+.SH NAME
+.B muhttpd.conf
+\- configuration file for \fBmuhttpd\fR
+.SH DESCRIPTION
+The configuration file \fBmuhttpd.conf\fR consists of configuration 
+directives, one per line. Each configuration directive consists of one or 
+more words, separated by whitespace. The file can also contain comments, 
+which start with a hash mark (\fB#\fR) and run until the end of the line.
+.SH DIRECTIVES
+The following directives are supported:
+.TP
+\fBgroup\fR \fIgroupname\fR
+Switch to \fIgroupname\fR before starting to accept connections
+.TP
+\fBhandler\fR \fItype\fR \fIprogram\fR
+Pass files of MIME type \fItype\fR through \fIprogram\fR
+.TP
+\fBlogfile\fR \fIfile\fR
+Log incoming requests to \fIfile\fR
+.TP
+\fBinclude\fR \fIfile\fR
+Read file as a configuration file
+.TP
+\fBindex\fR \fIname ...\fR
+Specify which file to send when a directory 
+index is requested. The first matching \fIname\fR is used
+.TP
+\fBport\fR \fIn\fR
+Listen for connections on port \fIn\fR
+.TP
+\fBtype\fR \fItype\fR \fIext ...\fR
+Treat files whose names end in one of 
+the strings in \fIext\fR as if they were of MIME type \fItype\fR
+.TP
+\fBuser\fR \fIusername\fR
+Switch to \fIusername\fR before starting to accept connections
+.TP
+\fBwebdir\fR \fIpath\fR
+Use \fIpath\fR as the directory containing the web pages
+.TP
+\fBwebroot\fR \fIpath\fR
+chroot(2) to path
+.SH EXAMPLE
+.nf
+port 80
+webdir /var/www
+logfile /var/log/muhttpd/logfile
+user www
+group www 
+index index.html index.php
+
+type text/html .html
+type text/css .css
+type text/plain .txt
+type application/x-httpd-php .php
+type image/png .png
+type image/jpeg .jpg .jpeg
+
+handler application/x-httpd-php /usr/lib/cgi-bin/php
+.fi
+.SH SEE ALSO
+muhttpd(8)

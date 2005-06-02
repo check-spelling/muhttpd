@@ -1,0 +1,28 @@
+Introduction
+
+muhttpd (mu HTTP deamon) is a simple but versatile web server written in 
+portable ANSI C. It supports static pages, CGI scripts, and MIME type 
+based handlers. It drops privileges before accepting any connections, and 
+it can log received requests. Development emphasis is on simplicity, 
+small size, and security. It has been tested on GNU/Linux, OpenBSD, NetBSD, 
+FreeBSD, Mac OS X, and Cygwin. It compiles and runs on 32 bits and 64 
+bits, little endian and big endian systems.
+
+Various features can be disabled at compile time, making the resulting 
+binary even simpler, smaller, and probably more secure.
+
+muhttpd has seen rapid development in early 2004, and is now a very 
+stable product.
+
+Installation
+
+See the file INSTALL for instructions, but basically it's the familiar
+
+./configure
+make
+make install
+
+Configuration
+
+muhttpd is configured using a configuration file, /etc/muhttpd/muhttpd.conf
+by default. See the file conf/muhttpd.conf for an example.
