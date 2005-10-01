@@ -1,5 +1,5 @@
 PACKAGE = muhttpd
-VERSION = 0.11.0
+VERSION = 1.0.0
 
 include Makefile.cfg
 
@@ -19,7 +19,7 @@ clean :
 distclean : clean
 	-rm $(TARGETS)
 
-install : install-package install-bin install-etc install-man
+install : install-package install-bin install-etc install-log install-man
 
 install-package : all
 	[ -d "$(PACKAGEDIR)" ] || mkdir -p "$(PACKAGEDIR)"
@@ -56,6 +56,13 @@ install-etc :
 				cp "$(PACKAGEDIR)/etc/$$name" "$${confdir}/$$name"; \
 			fi; \
 		done; \
+	fi
+
+install-log :
+	if [ ! -e "$(LOGDIR)/muhttpd/logfile" ]; \
+	then \
+		mkdir -p "$(LOGDIR)/muhttpd" && \
+			touch "$(LOGDIR)/muhttpd/logfile"; \
 	fi
 
 install-man :

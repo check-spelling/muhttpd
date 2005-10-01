@@ -20,12 +20,8 @@ int main(int argc, char **argv) {
 		conn = accept(sock, NULL, 0);
 		/* Fork a child to handle the connection */
 		if(!fork()) {
-			/* Attach the socket to stdin and stdout */
-			close(0);
-			close(1);
+			/* Duplicate the socket on stdout */
 			dup(conn);
-			dup(conn);
-			closesocket(conn);
 
 			serve();
 			exit(0);
