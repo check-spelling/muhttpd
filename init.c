@@ -23,6 +23,11 @@ static void sighandler(int num) {
 	exit(0xff);
 }
 
+/* Wait for a died child process */
+static void sigchldhandler(int num) {
+	wait(NULL);
+}
+
 void init(int argc, char **argv) {
 	char *config_file = CONFIGFILE;
 	int i;
@@ -34,7 +39,7 @@ void init(int argc, char **argv) {
 	/* Catch segfaults */
 	signal(SIGSEGV, sighandler);
 	/* Exorcise zombies */
-	signal(SIGCHLD, SIG_IGN);
+	signal(SIGCHLD, sigchldhandler);
 
 	config = get_default_config();
 	if(!config) {
