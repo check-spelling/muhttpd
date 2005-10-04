@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <stdlib.h>
 
 SOCKET sock;
 
@@ -24,7 +25,7 @@ int main(int argc, char **argv) {
 			dup(conn);
 
 			serve();
-			exit(0);
+			exit(EXIT_SUCCESS);
 		}
 		/* close the socket in the parent process */
 		closesocket(conn);

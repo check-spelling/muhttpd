@@ -20,7 +20,7 @@ extern SOCKET sock;	/* from main.c */
 
 static void sighandler(int num) {
 	fprintf(stderr, "Caught signal %d\n", num);
-	exit(0xff);
+	exit(EXIT_FAILURE);
 }
 
 /* Wait for a died child process */
@@ -44,7 +44,7 @@ void init(int argc, char **argv) {
 	config = get_default_config();
 	if(!config) {
 		perror("get_default_config");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Parse command line */
@@ -54,7 +54,7 @@ void init(int argc, char **argv) {
 		} else {
 			fprintf(stderr, "ERROR: Invalid argument: %s\n",
 				argv[i]);
-			exit(0x80);
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -63,7 +63,7 @@ void init(int argc, char **argv) {
 			"ERROR: Error loading configuration from \"%s\"\n",
 			config_file);
 		if(errno) perror("read_config_file");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	set_current_config(config);
@@ -77,7 +77,7 @@ void init(int argc, char **argv) {
 	sock = tcp_listen(config->port);
 	if(sock == -1) {
 		perror("tcp_listen");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 #ifdef ENABLE_BACKGROUND
@@ -85,8 +85,8 @@ void init(int argc, char **argv) {
 	pid = fork();
 	if(pid < 0) {
 		perror("fork");
-		exit(1);
-	} else if(pid) exit;
+		exit(EXIT_FAILURE);
+	} else if(pid) exit(EXIT_SUCCESS);
 #endif
 
 #ifdef ENABLE_PIDFILE
