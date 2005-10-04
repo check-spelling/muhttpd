@@ -13,6 +13,7 @@ packagedirsfx='/share/$(PACKAGE)-$(VERSION)'
 sbindir='$(PREFIX)/sbin'
 sysconfdir='/etc'
 mandir='$(PREFIX)/share/man'
+logdir='/var/log'
 need_clearenv=yes
 need_strndup=yes
 need_libgen=no
@@ -117,6 +118,10 @@ do
 		shift
 		sysconfdir=$1
 	;;
+	--logdir)
+		shift
+		logdir=$1
+	;;
 	--help)
 		echo "See the file INSTALL for options"
 		exit
@@ -162,6 +167,7 @@ TRUEPACKAGEDIR ?= \$(TRUEPREFIX)$packagedirsfx
 SBINDIR ?= $sbindir
 SYSCONFDIR ?= \$(DESTDIR)$sysconfdir
 MANDIR ?= $mandir
+LOGDIR ?= $logdir
 
 OBJECTS = $objects
 EOT
