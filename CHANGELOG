@@ -1,3 +1,9 @@
+2005-10-05	Inglorion	1.0.1 Released
+
+2005-10-05	Inglorion	logdir added to configure script
+				Fixed handling of child processes
+				Fixed calls to exit
+
 2005-06-04	Inglorion	1.0.0 Released
 
 2005-06-02	Inglorion	Split install target into install-package,
