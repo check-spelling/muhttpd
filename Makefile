@@ -10,9 +10,6 @@ all : $(TARGETS)
 muhttpd : $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LIBS)
 
-%.o : %.c flags.h
-	$(CC) $(CFLAGS) -c $<
-
 clean :
 	-rm $(OBJECTS)
 
@@ -77,6 +74,11 @@ install-man :
 	
 love :
 	#unzip; strip; touch; finger; mount; fsck; more; yes; umount; sleep
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+.SUFFIXES : .c .o
 
 .PHONY : all clean distclean install install-package install-bin install-etc \
 	install-man love

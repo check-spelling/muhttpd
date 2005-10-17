@@ -167,7 +167,7 @@ TRUEPACKAGEDIR ?= \$(TRUEPREFIX)$packagedirsfx
 SBINDIR ?= $sbindir
 SYSCONFDIR ?= \$(DESTDIR)$sysconfdir
 MANDIR ?= $mandir
-LOGDIR ?= $logdir
+LOGDIR ?= \$(DESTDIR)$logdir
 
 OBJECTS = $objects
 EOT
