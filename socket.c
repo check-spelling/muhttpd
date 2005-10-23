@@ -9,7 +9,7 @@ SOCKET tcp_listen(short port) {
 	
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
-	addr.sin_addr = INADDR_ANY;
+	addr.sin_addr.s_addr = INADDR_ANY;
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == INVALID_SOCKET) return -1;
