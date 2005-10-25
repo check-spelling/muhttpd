@@ -163,6 +163,8 @@ cat > Makefile.cfg <<EOT
 CFLAGS += $CFLAGS
 LIBS += $LIBS
 
+VERSION = $version
+
 PREFIX ?= \$(DESTDIR)$prefix
 PACKAGEDIR ?= \$(PREFIX)$packagedirsfx
 TRUEPREFIX ?= $prefix
