@@ -1,5 +1,4 @@
 PACKAGE = muhttpd
-VERSION = 1.0.3
 
 include Makefile.cfg
 

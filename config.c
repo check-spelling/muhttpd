@@ -136,7 +136,7 @@ static struct muhttpd_config *pidfile_directive(char *line, struct muhttpd_confi
 		return NULL;
 	}
 
-	config->pidfile = tok;
+	config->pidfile = strdup(tok);
 
 	if(get_next_token(&line))
 		fputs("WARNING: Stray token after pidfile directive\n", stderr);

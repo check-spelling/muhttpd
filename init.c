@@ -71,7 +71,7 @@ void init(int argc, char **argv) {
 
 	/* Set up the environment */
 	clearenv();
-	setenv("SERVER_SOFTWARE", "muhttpd/0.11", 1);
+	setenv("SERVER_SOFTWARE", SERVER_SOFTWARE, 1);
 	setenv("DOCUMENT_ROOT", config->webdir, 1);
 
 	sock = tcp_listen(config->port);
@@ -91,12 +91,20 @@ void init(int argc, char **argv) {
 
 #ifdef ENABLE_PIDFILE
 	/* Write pidfile */
-	pidfile = fopen(config->pidfile, "w");
-	if(fprintf(pidfile, "%d\n", getpid()) < 0) {
-		perror(config->pidfile);
-		fputs("WARNING: Could not write pidfile\n", stderr);
+	if(config->pidfile) {
+		pidfile = fopen(config->pidfile, "w");
+		if(pidfile) {
+			if(fprintf(pidfile, "%d\n", getpid()) < 0) {
+				perror(config->pidfile);
+				fputs("WARNING: Could not write pidfile\n",
+					stderr);
+			}
+			fclose(pidfile);
+		} else {
+			perror(config->pidfile);
+			fputs("WARNING: Could not open pidfile\n", stderr);
+		}
 	}
-	fclose(pidfile);
 #endif
 
 #ifndef DISABLE_SETUID

@@ -1,5 +1,8 @@
 #! /bin/sh
 
+# Version
+version=1.0.4
+
 # Defaults
 cgi=yes
 mime=yes
@@ -183,6 +186,8 @@ EOT
 [ $logging = 'yes' ] && echo "#define ENABLE_LOGGING" >> flags.h
 [ $pidfile = 'yes' ] && echo "#define ENABLE_PIDFILE" >> flags.h
 [ $background = 'yes' ] && echo "#define ENABLE_BACKGROUND" >> flags.h
+echo "#define VERSION $version" >> flags.h
+echo "#define SERVER_SOFTWARE \"muhttpd/$version\"" >> flags.h
 echo "#define CONFIGFILE \"${sysconfdir}/muhttpd/muhttpd.conf\"" >> flags.h
 
 echo
