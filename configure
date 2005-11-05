@@ -19,7 +19,6 @@ mandir='$(PREFIX)/man'
 logdir='/var/log'
 need_clearenv=yes
 need_strndup=yes
-need_libgen=no
 
 # Command line options override defaults
 while [ ! "$1." = '.' ]
@@ -93,12 +92,6 @@ do
 	--without-clearenv)
 		need_clearenv=no
 	;;
-	--with-libgen)
-		need_libgen=yes
-	;;
-	--without-libgen)
-		need_libgen=no
-	;;
 	--with-strndup)
 		need_strndup=yes
 	;;
@@ -161,7 +154,6 @@ objects='main.o init.o socket.o request.o status.o config.o globals.o'
 [ $logging = 'yes' ] && objects="$objects log.o"
 
 ## Generate Makefile.cfg
-[ $need_libgen = 'yes' ] && LIBS="$LIBS -lgen"
 
 cat > Makefile.cfg <<EOT
 CFLAGS += $CFLAGS

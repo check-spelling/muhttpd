@@ -1,4 +1,27 @@
+Building and Installing muhttpd
+===============================
+
+This document describes how to build and install muhttpd. It contains 
+the following sections:
+
 Quick Start
+	A brief overview of the installation process
+
+Configuration
+	A detailed discussion of the configuration process
+
+Building
+	A detailed discussion of the building process
+
+Installation
+	A detailed discussion of the installation process
+
+Platform-Specific Instructions
+	Instructions for building and installing muhttpd on various 
+	platforms.
+
+Quick Start
+-----------
 
 Basically, building and installation is as simple as:
 
@@ -11,11 +34,25 @@ This will build muhttpd with all features enabled, and install to
 and installation.
 
 Configuration
+-------------
 
 The configure script accepts the following options:
 
 --prefix <path>
 	Use <path> as the installation prefix (default: /usr/local)
+
+--mandir <path>
+	Install manpages to <path> (default: ${PREFIX}/man)
+
+--packagedir <path>
+	Install muhttpd files to <path>
+	(default: ${PREFIX/share/muhttpd-${VERSION})
+
+--sbindir <path>
+	Install system binaries to <path> (default: ${PREFIX}/sbin)
+
+--sysconfdir <path>
+	Install configuration files to <path> (default: /etc)
 
 --disable-<feature>
 	Do not include <feature>. <feature> can be one of background, cgi,
@@ -43,14 +80,6 @@ The configure script accepts the following options:
 	provide clearenv, this can be used to generate a slightly smaller 
 	muhttpd binay
 
---with-libgen
-	Link against libgen. This is required on Cygwin, which does not 
-	provide basename and dirname as part of the C library.
-
---without-libgen
-	Do not link aganist libgen. This is the default, as most systems 
-	provide the required functionality in libc.
-
 --with-strndup
 	Use the included strndup implementation. This is enabled by 
 	default, because strndup is not a standard function and most C 
@@ -61,12 +90,22 @@ The configure script accepts the following options:
 	to create a slightly smaller muhttpd binary on systems that 
 	provide strndup, such as GNU systems.
 
-Compiling
+In addition to the above flags, the configure script honors a number of 
+environment variables. Most importantly, the variable CFLAGS can be used 
+to set the flags that will be passed to the C compiler, and LIBS can be 
+used to pass flags to the linker. Some operating systems require extra 
+flags to be passed.
 
-To start compilation, type make. Both GNU make and BSD make should work, 
-other versions of make may not work.
+Building
+--------
 
-Installing
+To build muhttpd, type make. Both GNU make and BSD make should work, 
+other versions of make may not work. Provided CFLAGS and LIBS were set
+correctly during the configuration stage, no special action has to be 
+taken during this stage.
+
+Installation
+------------
 
 To perform a regular installation, type make install. You can modify the 
 installation prefix by setting the PREFIX environment variable. E.g.
@@ -76,3 +115,40 @@ env PREFIX=./fake make install
 installs muhttpd to ./fake instead of the prefix specified to configure. 
 This can be used for staging installs, as performed by many packaging 
 systems.
+
+Platform-Specific Instructions
+------------------------------
+
+muhttpd aims to require only features from POSIX, which means that it 
+should compile and run on any POSIX-compliant platform without any 
+problems. Unfortunately, not all platforms are POSIX-compliant, and even 
+among those that are, there are differences that affect the build 
+process.
+
+The following platforms are known not to require any special parameters: 
+GNU/Linux, NetBSD, and OpenBSD.
+
+The paragraphs below discuss platforms that are known to require special 
+parameters.
+
+Cygwin
+
+On Cygwin, the functions basename and dirname are not included in the 
+standard C library, but in a separate library called libgen. In order to 
+build and use muhttpd, you need to install libgen and link muhttpd with 
+it. The linking can be accomplished by running the configure script as 
+follows:
+
+	env LIBS=-lgen ./configure
+
+The rest of the build and installation process proceeds as normal.
+
+QNX
+
+QNX doesn't define socklen_t, and the socket functions are in a separate 
+library called libsocket. The following configure command allows 
+building and installing muhttpd on QNX:
+
+	env CFLAGS=-Dsocklen_t=int LIBS=-lsocket ./configure
+
+The normal procedure can be followed for the rest of the build process.
