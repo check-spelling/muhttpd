@@ -1,7 +1,7 @@
 #! /bin/sh
 
 # Version
-version=1.0.4
+version=1.0.5
 
 # Defaults
 cgi=yes
@@ -15,7 +15,7 @@ prefix='/usr/local'
 packagedirsfx='/share/$(PACKAGE)-$(VERSION)'
 sbindir='$(PREFIX)/sbin'
 sysconfdir='/etc'
-mandir='$(PREFIX)/share/man'
+mandir='$(PREFIX)/man'
 logdir='/var/log'
 need_clearenv=yes
 need_strndup=yes
@@ -24,7 +24,7 @@ need_libgen=no
 # Command line options override defaults
 while [ ! "$1." = '.' ]
 do
-	case $1 in
+	case "$1" in
 	--disable-cgi)
 		cgi=no
 	;;
@@ -105,25 +105,29 @@ do
 	--without-strndup)
 		need_strndup=no
 	;;
+	--mandir)
+		shift
+		mandir="$1"
+	;;
 	--prefix)
 		shift
-		prefix=$1
+		prefix="$1"
 	;;
 	--packagedir)
 		shift
-		packagedir=$1
+		packagedir="$1"
 	;;
 	--sbindir)
 		shift
-		sbindir=$1
+		sbindir="$1"
 	;;
 	--sysconfdir)
 		shift
-		sysconfdir=$1
+		sysconfdir="$1"
 	;;
 	--logdir)
 		shift
-		logdir=$1
+		logdir="$1"
 	;;
 	--help)
 		echo "See the file INSTALL for options"
