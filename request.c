@@ -36,12 +36,12 @@ static char *decode_url(const char *url, char *filename, size_t len) {
 		else if(*p == '?') break;
 		else if(*p == '%') {
 			p++;
-			if('0' <= *p <= '9') *q = *p - '0';
-			else *q = (*p & ~32) - 'A';
+			if('0' <= *p && *p <= '9') *q = *p - '0';
+			else *q = (*p & ~32) - '7';
 			*q = *q << 4;
 			p++;
-			if('0' <= *p <= '9') *q |= *p - '0';
-			else *q |= (*p & ~32) - 'A';
+			if('0' <= *p && *p <= '9') *q |= *p - '0';
+			else *q |= (*p & ~32) - '7';
 		}
 		else *q = *p;
 		q++;
