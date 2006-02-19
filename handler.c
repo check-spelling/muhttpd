@@ -24,7 +24,8 @@ void invoke_handler(const char *handler, struct request *req) {
 	char *p, *q, *r, *s, *t;
 
 #ifdef ENABLE_LOGGING
-	log_request(req);
+	if(current_config->logfile) log_request(req);
+	fflush(current_config->logfile);
 #endif
 
 	/* Set environment variables */
