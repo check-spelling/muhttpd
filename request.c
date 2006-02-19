@@ -19,6 +19,9 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#define ADDR_BYTE(X, N) \
+	((char*) &(((struct sockaddr_in*) &(X))->sin_addr.s_addr))[N]
+
 #define BUFSIZE 4096
 
 #ifndef PATH_MAX
@@ -274,16 +277,15 @@ static int read_request(char *buf, size_t len) {
 	return 0;
 }
 
-void serve() {
+void serve(struct sockaddr *addr, socklen_t salen) {
 	char buf[BUFSIZE], *p;
 	struct request req;
-	socklen_t salen;
 	int n;
 
 	memset(&req, 0, sizeof(req));
 
-	/* Get address of client */
-	getpeername(0, (struct sockaddr*) &(req.remote_addr), &salen);
+	/* Set remote address */
+	memcpy(&(req.remote_addr), addr, salen);
 
 	n = read_request(buf, BUFSIZE);
 	if(n) {

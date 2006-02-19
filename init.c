@@ -35,6 +35,9 @@ void init(int argc, char **argv) {
 	pid_t pid;
 	FILE *pidfile;
 #endif
+#ifdef ENABLE_LOGGING
+	int logfd;
+#endif
 
 	/* Catch segfaults */
 	signal(SIGSEGV, sighandler);
@@ -94,7 +97,7 @@ void init(int argc, char **argv) {
 	if(config->pidfile) {
 		pidfile = fopen(config->pidfile, "w");
 		if(pidfile) {
-			if(fprintf(pidfile, "%d\n", getpid()) < 0) {
+			if(fprintf(pidfile, "%ld\n", (long) getpid()) < 0) {
 				perror(config->pidfile);
 				fputs("WARNING: Could not write pidfile\n",
 					stderr);
@@ -131,9 +134,19 @@ void init(int argc, char **argv) {
 		stderr);
 #endif /* !DISABLE_SETUID */
 
-	/* Detach */
 	close(0);
 	close(1);
 	close(2);
+#ifdef ENABLE_BACKGROUND
+	/* Detach */
 	setsid();
+#endif /* ENABLE_BACKGROUND */
+
+#ifdef ENABLE_LOGGING
+	/* Connect logfile to standard error */
+	if(config->logfile) {
+		logfd = fileno(config->logfile);
+		if(logfd >= 0) dup2(logfd, 2);
+	}
+#endif
 }

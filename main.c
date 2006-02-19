@@ -13,18 +13,20 @@ SOCKET sock;
 
 int main(int argc, char **argv) {
 	SOCKET conn;
+	struct sockaddr saddr;
+	socklen_t salen;
 
 	init(argc, argv);
 
 	while(1) {
 		/* Accept a connection */
-		conn = accept(sock, NULL, 0);
+		conn = accept(sock, &saddr, &salen);
 		/* Fork a child to handle the connection */
 		if(!fork()) {
 			/* Duplicate the socket on stdout */
 			dup(conn);
 
-			serve();
+			serve(&saddr, salen);
 			exit(EXIT_SUCCESS);
 		}
 		/* close the socket in the parent process */

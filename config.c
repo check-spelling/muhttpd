@@ -226,7 +226,7 @@ static struct muhttpd_config *parse_config_line(char *line,
 			}
 		}
 
-		while(tok = get_next_token(&line)) {
+		while((tok = get_next_token(&line))) {
 			tok = strdup(tok);
 			if(!tok) {
 				perror("strdup");
@@ -296,7 +296,7 @@ static struct muhttpd_config *parse_config_line(char *line,
 
 		return config;
 	} else if(!strcmp(tok, "index")) {
-		while(tok = get_next_token(&line)) {
+		while((tok = get_next_token(&line))) {
 			p = realloc(config->index,
 				(config->indices + 1) * sizeof(char*));
 			if(!p) {
