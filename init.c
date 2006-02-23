@@ -11,12 +11,18 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <unistd.h>
+#ifdef ENABLE_SSL
+#include "ssl.h"
+#endif
 
 #ifndef CONFIGFILE
 #define CONFIGFILE "/etc/muhttpd/muhttpd.conf"
 #endif
 
 extern SOCKET sock;	/* from main.c */
+#ifdef ENABLE_SSL
+extern SOCKET ssl_sock;	/* from main.c */
+#endif
 
 static void sighandler(int num) {
 	fprintf(stderr, "Caught signal %d\n", num);
@@ -50,6 +56,15 @@ void init(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
+#ifdef ENABLE_SSL
+	/* Initialize SSL */
+	config->ssl_ctx = ssl_init();
+	if(!config->ssl_ctx) {
+		ssl_perror("ssl_init");
+		exit(EXIT_FAILURE);
+	}
+#endif
+
 	/* Parse command line */
 	for(i = 1; i < argc; i++) {
 		if(!strcmp(argv[i], "-c")) {
@@ -77,11 +92,27 @@ void init(int argc, char **argv) {
 	setenv("SERVER_SOFTWARE", SERVER_SOFTWARE, 1);
 	setenv("DOCUMENT_ROOT", config->webdir, 1);
 
-	sock = tcp_listen(config->port);
-	if(sock == -1) {
-		perror("tcp_listen");
-		exit(EXIT_FAILURE);
+	if(config->port) {
+		sock = tcp_listen(config->port);
+		if(sock == -1) {
+			perror("tcp_listen");
+			exit(EXIT_FAILURE);
+		}
+	} else {
+		sock = -1;
 	}
+
+#ifdef ENABLE_SSL
+	if(config->ssl_port) {
+		ssl_sock = tcp_listen(config->ssl_port);
+		if(ssl_sock == -1) {
+			perror("tcp_listen");
+			exit(EXIT_FAILURE);
+		}
+	} else {
+		ssl_sock = -1;
+	}
+#endif
 
 #ifdef ENABLE_BACKGROUND
 	/* Background */

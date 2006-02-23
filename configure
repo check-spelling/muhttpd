@@ -1,16 +1,17 @@
 #! /bin/sh
 
 # Version
-version=1.0.7
+version=1.1.0
 
 # Defaults
-cgi=yes
-mime=yes
-handlers=yes
-setuid=yes
-logging=yes
-pidfile=yes
 background=yes
+cgi=yes
+handlers=yes
+logging=yes
+mime=yes
+pidfile=yes
+setuid=yes
+ssl=yes
 prefix='/usr/local'
 packagedirsfx='/share/$(PACKAGE)-$(VERSION)'
 sbindir='$(PREFIX)/sbin'
@@ -24,18 +25,17 @@ need_strndup=yes
 while [ ! "$1." = '.' ]
 do
 	case "$1" in
+	--disable-background)
+		background=no
+	;;
+	--enable-background)
+		background=yes
+	;;
 	--disable-cgi)
 		cgi=no
 	;;
 	--enable-cgi)
 		cgi=yes
-	;;
-	--disable-mime)
-		mime=no
-		handlers=no
-	;;
-	--enable-mime)
-		mime=yes
 	;;
 	--disable-handlers)
 		handlers=no
@@ -44,17 +44,18 @@ do
 		handlers=yes
 		mime=yes
 	;;
-	--disable-setuid)
-		setuid=no
-	;;
-	--enable-setuid)
-		setuid=yes
-	;;
 	--disable-logging)
 		logging=no
 	;;
 	--enable-logging)
 		logging=yes
+	;;
+	--disable-mime)
+		mime=no
+		handlers=no
+	;;
+	--enable-mime)
+		mime=yes
 	;;
 	--disable-pidfile)
 		pidfile=no
@@ -62,29 +63,37 @@ do
 	--enable-pidfile)
 		pidfile=yes
 	;;
-	--disable-background)
-		background=no
+	--disable-setuid)
+		setuid=no
 	;;
-	--enable-background)
-		background=yes
+	--enable-setuid)
+		setuid=yes
+	;;
+	--disable-ssl)
+		ssl=no
+	;;
+	--enable-ssl)
+		ssl=yes
 	;;
 	--disable-everything)
-		mime=no
+		background=no
 		cgi=no
 		handlers=no
-		setuid=no
 		logging=no
+		mime=no
 		pidfile=no
-		background=no
+		setuid=no
+		ssl=no
 	;;
 	--enable-everything)
-		mime=yes
+		background=yes
 		cgi=yes
 		handlers=yes
-		setuid=yes
 		logging=yes
+		mime=yes
 		pidfile=yes
-		background=yes
+		setuid=yes
+		ssl=yes
 	;;
 	--with-clearenv)
 		need_clearenv=yes
@@ -136,22 +145,28 @@ done
 
 # Print summary
 echo "Features:"
-echo "MIME Types:	$mime"
-echo "CGI Support:	$cgi"
-echo "Handlers:	$handlers"
-echo "Set uid/gid:	$setuid"
-echo "Logging:	$logging"
-echo "Pidfile:	$pidfile"
 echo "Backgrounding:	$background"
+echo "CGI Support:	$cgi"
+echo "Logging:	$logging"
+echo "MIME Types:	$mime"
+echo "Handlers:	$handlers"
+echo "Pidfile:	$pidfile"
+echo "Set uid/gid:	$setuid"
+echo "SSL support:	$ssl"
 
 # Select objects to be compiled in
-objects='main.o init.o socket.o request.o status.o config.o globals.o'
+objects='main.o globals.o init.o socket.o request.o status.o config.o serve.o'
 
 [ $need_strndup = 'yes' ] && objects="$objects strndup.o"
 [ $need_clearenv = 'yes' ] && objects="$objects clearenv.o"
-[ $mime = 'yes' ] && objects="$objects type.o"
 [ $cgi = 'yes' -o $handlers = 'yes' ] && objects="$objects handler.o"
 [ $logging = 'yes' ] && objects="$objects log.o"
+[ $mime = 'yes' ] && objects="$objects type.o"
+if [ $ssl = 'yes' ]
+then
+	objects="$objects ssl.o"
+	LIBS="$LIBS -lssl -lcrypto"
+fi
 
 ## Generate Makefile.cfg
 
@@ -177,13 +192,14 @@ EOT
 cat > flags.h <<EOT
 /* Compile time options */
 EOT
+[ $background = 'yes' ] && echo "#define ENABLE_BACKGROUND" >> flags.h
 [ $cgi = 'yes' ] && echo "#define ENABLE_CGI" >> flags.h
 [ $handlers = 'yes' ] && echo "#define ENABLE_HANDLERS" >> flags.h
-[ $mime = 'no' ] && echo "#define DISABLE_MIME" >> flags.h
-[ $setuid = 'no' ] && echo "#define DISABLE_SETUID" >> flags.h
 [ $logging = 'yes' ] && echo "#define ENABLE_LOGGING" >> flags.h
+[ $mime = 'no' ] && echo "#define DISABLE_MIME" >> flags.h
 [ $pidfile = 'yes' ] && echo "#define ENABLE_PIDFILE" >> flags.h
-[ $background = 'yes' ] && echo "#define ENABLE_BACKGROUND" >> flags.h
+[ $setuid = 'no' ] && echo "#define DISABLE_SETUID" >> flags.h
+[ $ssl = 'yes' ] && echo "#define ENABLE_SSL" >> flags.h
 echo "#define VERSION $version" >> flags.h
 echo "#define SERVER_SOFTWARE \"muhttpd/$version\"" >> flags.h
 echo "#define CONFIGFILE \"${sysconfdir}/muhttpd/muhttpd.conf\"" >> flags.h

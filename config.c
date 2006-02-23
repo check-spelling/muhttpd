@@ -145,6 +145,65 @@ static struct muhttpd_config *pidfile_directive(char *line, struct muhttpd_confi
 }
 #endif /* ENABLE_PIDFILE */
 
+#ifdef ENABLE_SSL
+static struct muhttpd_config *ssl_cert_directive(char *line, struct muhttpd_config *config) {
+	char *tok;
+
+	tok = get_next_token(&line);
+	if(!tok) {
+		fputs("ERROR: Invalid token in ssl-cert directive\n",
+			stderr);
+		return NULL;
+	}
+	if(get_next_token(&line))
+		fputs("WARNING: Stray token after ssl-cert directive\n",
+			stderr);
+	
+	if(ssl_set_cert_file(config->ssl_ctx, tok) == 0) return config;
+	else {
+		ssl_perror("ssl_set_cert_file");
+		return NULL;
+	}
+}
+
+static struct muhttpd_config *ssl_key_directive(char *line, struct muhttpd_config *config) {
+	char *tok;
+
+	tok = get_next_token(&line);
+	if(!tok) {
+		fputs("ERROR: Invalid token in ssl-key directive\n",
+			stderr);
+		return NULL;
+	}
+	if(get_next_token(&line))
+		fputs("WARNING: Stray token after ssl-key directive\n",
+			stderr);
+	
+	if(ssl_set_key_file(config->ssl_ctx, tok) == 0) return config;
+	else {
+		ssl_perror("ssl_set_key_file");
+		return NULL;
+	}
+}
+
+static struct muhttpd_config *ssl_port_directive(char *line, struct muhttpd_config *config) {
+	char *tok;
+
+	tok = get_next_token(&line);
+	if(!tok) {
+		fputs("ERROR: Invalid token in ssl-port directive\n",
+			stderr);
+		return NULL;
+	}
+	config->ssl_port = atoi(tok);
+	if(get_next_token(&line))
+		fputs("WARNING: Stray token after ssl-port directive\n",
+			stderr);
+	
+	return config;
+}
+#endif /* ENABLE_SSL */
+
 /** Parse configuration line and update configuration */
 static struct muhttpd_config *parse_config_line(char *line,
 	struct muhttpd_config *config) {
@@ -331,6 +390,14 @@ static struct muhttpd_config *parse_config_line(char *line,
 	} else if(!strcmp(tok, "foreground")) {
 		config->background = 0;
 #endif
+#ifdef ENABLE_SSL
+	} else if(!strcmp(tok, "ssl-cert")) {
+		return ssl_cert_directive(line, config);
+	} else if(!strcmp(tok, "ssl-key")) {
+		return ssl_key_directive(line, config);
+	} else if(!strcmp(tok, "ssl-port")) {
+		return ssl_port_directive(line, config);
+#endif
 	} else {
 		fprintf(stderr, "ERROR: Configuration directive \"%s\" not "
 			"understood\n", tok);
@@ -408,6 +475,9 @@ struct muhttpd_config *get_default_config() {
 #endif
 #ifdef ENABLE_PIDFILE
 	config->pidfile = PIDFILE;
+#endif
+#ifdef ENABLE_SSL
+	config->ssl_port = 443;
 #endif
 
 	return config;

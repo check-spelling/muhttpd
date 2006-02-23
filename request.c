@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/time.h>
+#include <errno.h>
 
 #define ADDR_BYTE(X, N) \
 	((char*) &(((struct sockaddr_in*) &(X))->sin_addr.s_addr))[N]
@@ -29,6 +31,44 @@
 #endif
 
 #define new(T) (T*) malloc(sizeof(T))
+
+/** Read request */
+static int read_request(char *buf, size_t len) {
+	int n, m = 0;
+	struct timeval tv;
+	fd_set fds;
+
+	/* Loop until full request received */
+	for(;;) {
+		/* Wait for data */
+		FD_ZERO(&fds);
+		FD_SET(0, &fds);
+		tv.tv_sec = 5;
+		tv.tv_usec = 0;
+		n = select(1, &fds, NULL, NULL, &tv);
+		if(n < 0) {
+			/* Interrupted system call */
+			if(errno == EINTR) continue;
+		} else if(n == 0) {
+			/* Timeout */
+			return HTTP_408;
+		}
+		
+		/* Read data */
+		n = read(0, &buf[m], 1);
+		if(n <= 0) {
+			if(errno == EAGAIN) continue;
+			else return HTTP_400;
+		}
+		buf[++m] = 0; /* NUL-terminate request */
+
+		/* If we got an empty line, we're done */
+		if(!strcmp(&buf[m - 4], "\r\n\r\n") ||
+			!strcmp(&buf[m - 2], "\n\n")) break;
+
+	} /* loop until full request received */
+	return 0;
+}
 
 /** Decode URL to filename */
 static char *decode_url(const char *url, char *filename, size_t len) {
@@ -57,6 +97,75 @@ static char *decode_url(const char *url, char *filename, size_t len) {
 
 	*q = 0;
 	return filename;
+}
+
+void do_request(struct sockaddr *addr, socklen_t salen) {
+	char buf[BUFSIZE], *p;
+	struct request req;
+	int n;
+
+	memset(&req, 0, sizeof(req));
+
+	/* Set remote address */
+	memcpy(&(req.remote_addr), addr, salen);
+
+	n = read_request(buf, BUFSIZE);
+	if(n) {
+		/* Error reading request */
+		if(n != HTTP_408) perror("read_request");
+		else fputs("Timeout while waiting for request\n", stderr);
+		req.filename = message_file[n];
+		req.uri = message[n];
+		req.status = n;
+		handle_and_log_request(&req);
+		return;
+	}
+
+	/* Set request method */
+	p = strchr(buf, ' ');
+	if(!p) {
+		req.filename = message_file[HTTP_400];
+		req.status = HTTP_400;
+	}
+	*p = 0;
+	req.method = buf;
+
+	/* See if method is one of the understood types */
+	if(strcmp(req.method, "GET")
+		&& strcmp(req.method, "POST")) {
+
+		/* Method not implemented */
+		req.filename = message_file[HTTP_501];
+		req.status = HTTP_501;
+	}
+
+	/* Set request URI */
+	req.uri = p + 1;
+	p = strpbrk(req.uri, " \r\n");
+
+	/* Detect protocol version */
+	if(*p != ' ') req.proto = "HTTP/0.9";
+	else {
+		*p = 0;
+		req.proto = p + 1;
+		p = strpbrk(req.proto, "\r\n");
+	}
+
+	/* Zero *p, move p past end of line */
+	p++;
+	if((*p == '\r' || *p == '\n') && *p != *(p - 1)) {
+		*(p - 1) = 0;
+		p++;
+	} else *(p - 1) = 0;
+
+	/* Pass request buffer to helper functions */
+	req.buf = p;
+
+	/* Set status code */
+	req.status = HTTP_200;
+
+	/* Handle request */
+	handle_and_log_request(&req);
 }
 
 void handle_request(struct request *req) {
@@ -220,7 +329,7 @@ void handle_request(struct request *req) {
 	while((n = (int) read(fd, buf, BUFSIZE)) > 0) {
 		p = buf;
 		do {
-			m = send(1, p, n, 0);
+			m = write(1, p, n);
 			if(m <= 0) break;
 			p += m;
 			n -= m;
@@ -235,111 +344,4 @@ void handle_and_log_request(struct request *req) {
 #ifdef ENABLE_LOGGING
 	if(current_config->logfile) log_request(req);
 #endif
-}
-
-/** Read request */
-static int read_request(char *buf, size_t len) {
-	int n, m = 0, timeout = 5;
-	char *p;
-
-	/* Loop until full request received */
-	for(;;) {
-		n = recv(0, buf, len - 1, MSG_PEEK);
-		/* Error receiving request */
-		if(n <= 0) return HTTP_400;
-		/* Sleep if we did not receive more data */
-		if(n <= m) {
-			sleep(1);
-			if(--timeout <= 0) return HTTP_408;
-		}
-		m = n;
-		buf[n] = 0; /* NUL-terminate request */
-		/* Detect empty line */
-		if(p = strstr(buf, "\r\n\r\n")) {
-			p += 4;
-		} else if(p = strstr(buf, "\n\n")) { /* Accept UNIX line ends */
-			p += 2;
-		}
-
-		/* If empty line detected */
-		if(p) {
-			len = (size_t) (p - buf);
-			p = buf;
-			while(len) {
-				n = recv(0, p, len, 0);
-				if(n < 0) return 0;
-				len -= n;
-				p += n;
-			}
-			break;
-		}
-	} /* loop until full request received */
-	return 0;
-}
-
-void serve(struct sockaddr *addr, socklen_t salen) {
-	char buf[BUFSIZE], *p;
-	struct request req;
-	int n;
-
-	memset(&req, 0, sizeof(req));
-
-	/* Set remote address */
-	memcpy(&(req.remote_addr), addr, salen);
-
-	n = read_request(buf, BUFSIZE);
-	if(n) {
-		/* Error reading request */
-		req.filename = message_file[n];
-		req.uri = message[n];
-		req.status = n;
-		handle_and_log_request(&req);
-		return;
-	}
-
-	/* Set request method */
-	p = strchr(buf, ' ');
-	if(!p) {
-		req.filename = message_file[HTTP_400];
-		req.status = HTTP_400;
-	}
-	*p = 0;
-	req.method = buf;
-
-	/* See if method is one of the understood types */
-	if(strcmp(req.method, "GET")
-		&& strcmp(req.method, "POST")) {
-
-		/* Method not implemented */
-		req.filename = message_file[HTTP_501];
-		req.status = HTTP_501;
-	}
-
-	/* Set request URI */
-	req.uri = p + 1;
-	p = strpbrk(req.uri, " \r\n");
-
-	/* Detect protocol version */
-	if(*p != ' ') req.proto = "HTTP/0.9";
-	else {
-		*p = 0;
-		req.proto = p + 1;
-		p = strpbrk(req.proto, "\r\n");
-	}
-
-	/* Zero *p, move p past end of line */
-	p++;
-	if((*p == '\r' || *p == '\n') && *p != *(p - 1)) {
-		*(p - 1) = 0;
-		p++;
-	} else *(p - 1) = 0;
-
-	/* Pass request buffer to helper functions */
-	req.buf = p;
-
-	/* Set status code */
-	req.status = HTTP_200;
-
-	/* Handle request */
-	handle_and_log_request(&req);
 }

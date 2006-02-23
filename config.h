@@ -5,29 +5,36 @@
 #ifdef ENABLE_LOGGING
 #include <stdio.h>
 #endif
+#ifdef ENABLE_SSL
+#include <openssl/ssl.h>
+#endif
 
 struct muhttpd_config {
 	int port;
 	char *webdir;
 	char *webroot;
-#ifndef DISABLE_MIME
-	struct type_list *known_types;
-	struct type_item *known_extensions;
-#endif
 	int indices;
 	char **index;
-#ifndef DISABLE_SETUID
-	uid_t uid;
-	gid_t gid;
+#ifdef ENABLE_BACKGROUND
+	int background;
 #endif
 #ifdef ENABLE_LOGGING
 	FILE *logfile;
 #endif
+#ifndef DISABLE_MIME
+	struct type_list *known_types;
+	struct type_item *known_extensions;
+#endif
 #ifdef ENABLE_PIDFILE
 	char *pidfile;
 #endif
-#ifdef ENABLE_BACKGROUND
-	int background;
+#ifndef DISABLE_SETUID
+	uid_t uid;
+	gid_t gid;
+#endif
+#ifdef ENABLE_SSL
+	int ssl_port;
+	SSL_CTX *ssl_ctx;
 #endif
 };
 
