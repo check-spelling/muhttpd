@@ -41,6 +41,7 @@ void invoke_handler(const char *handler, struct request *req) {
 	} else {
 		setenv("SCRIPT_NAME", req->uri, 1);
 	}
+	/* Allocate memory for sprintf */
 	p = malloc(strlen(config->webdir) + strlen(req->filename) + 1);
 	if(!p) {
 		req->filename = message_file[HTTP_500];
@@ -48,7 +49,9 @@ void invoke_handler(const char *handler, struct request *req) {
 		handle_request(req);
 		return;
 	}
+	/*@-bufferoverflowhigh@*/
 	sprintf(p, "%s%s", config->webdir, req->filename);
+	/*@=bufferoverflowhigh@*/
 	setenv("SCRIPT_FILENAME", p, 1);
 	setenv("REDIRECT_STATUS", message[req->status], 1);
 

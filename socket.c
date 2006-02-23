@@ -1,10 +1,9 @@
 #include "flags.h"
 #include "socket.h"
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-SOCKET tcp_listen(short port) {
+SOCKET tcp_listen(in_port_t port) {
 	SOCKET sock;
 	struct sockaddr_in addr;
 	

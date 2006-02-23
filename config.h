@@ -1,6 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #include <sys/types.h>
+#include <netinet/in.h>
 #include "type.h"
 #ifdef ENABLE_LOGGING
 #include <stdio.h>
@@ -10,7 +11,7 @@
 #endif
 
 struct muhttpd_config {
-	int port;
+	in_port_t port;
 	char *webdir;
 	char *webroot;
 	int indices;
@@ -33,7 +34,7 @@ struct muhttpd_config {
 	gid_t gid;
 #endif
 #ifdef ENABLE_SSL
-	int ssl_port;
+	in_port_t ssl_port;
 	SSL_CTX *ssl_ctx;
 #endif
 };

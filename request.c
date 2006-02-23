@@ -34,7 +34,8 @@
 
 /** Read request */
 static int read_request(char *buf, size_t len) {
-	int n, m = 0;
+	int r, m = 0;
+	ssize_t n;
 	struct timeval tv;
 	fd_set fds;
 
@@ -45,11 +46,11 @@ static int read_request(char *buf, size_t len) {
 		FD_SET(0, &fds);
 		tv.tv_sec = 5;
 		tv.tv_usec = 0;
-		n = select(1, &fds, NULL, NULL, &tv);
-		if(n < 0) {
+		r = select(1, &fds, NULL, NULL, &tv);
+		if(r < 0) {
 			/* Interrupted system call */
 			if(errno == EINTR) continue;
-		} else if(n == 0) {
+		} else if(r == 0) {
 			/* Timeout */
 			return HTTP_408;
 		}
@@ -170,7 +171,8 @@ void do_request(struct sockaddr *addr, socklen_t salen) {
 
 void handle_request(struct request *req) {
 	char filename[PATH_MAX], buf[BUFSIZE], *p;
-	int fd, n, m;
+	int fd, i;
+	ssize_t n, m;
 	struct stat stats;
 
 	/* If status != 200 and no filename, send status message */
@@ -221,6 +223,7 @@ void handle_request(struct request *req) {
 	if(S_ISDIR(stats.st_mode)) {
 		/* If filename doesn't end in '/', redirect client */
 		if(req->filename[strlen(req->filename) - 1] != '/') {
+			/* Allocate memory for sprintf */
 			req->location = malloc(strlen(req->uri) + 2);
 			if(!req->location) {
 				req->status = HTTP_500;
@@ -235,7 +238,9 @@ void handle_request(struct request *req) {
 				req->location[p - req->uri] = '/';
 				strcpy(&req->location[p - req->uri + 1], p);
 			} else {
+				/*@-bufferoverflowhigh@*/
 				sprintf(req->location, "%s/", req->uri);
+				/*@=bufferoverflowhigh@*/
 			}
 			req->status = HTTP_301;
 			req->filename = message_file[HTTP_301];
@@ -243,17 +248,20 @@ void handle_request(struct request *req) {
 			return;
 		} else {
 			/* Send index file */
-			for(n = 0; n < config->indices; n++) {
+			for(i = 0; i < config->indices; i++) {
+				/* Allocate memory for sprintf */
 				p = malloc(strlen(req->filename)
-					+ strlen(config->index[n]) + 1);
+					+ strlen(config->index[i]) + 1);
 				if(!p) {
 					req->status = HTTP_500;
 					req->filename = message_file[HTTP_500];
 					handle_request(req);
 					return;
 				}
+				/*@-bufferoverflowhigh@*/
 				sprintf(p, "%s%s", req->filename,
-					config->index[n]);
+					config->index[i]);
+				/*@=bufferoverflowhigh@*/
 
 				if(!stat(&p[1], &stats)) {
 					req->filename = p;
@@ -326,7 +334,7 @@ void handle_request(struct request *req) {
 	fflush(stdout);
 
 	/* Beam the data over */
-	while((n = (int) read(fd, buf, BUFSIZE)) > 0) {
+	while((n = read(fd, buf, BUFSIZE)) > 0) {
 		p = buf;
 		do {
 			m = write(1, p, (size_t) n);

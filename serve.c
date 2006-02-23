@@ -17,9 +17,10 @@
 	SSL_free(ssl); \
 	exit(X)
 
-static int write_all(int fd, char *buf, int len) {
-	int i = 0, n;
-	while(i < len) {
+static ssize_t write_all(int fd, char *buf, size_t len) {
+	ssize_t i = 0, n;
+
+	while(((size_t) i) < len) {
 		n = write(fd, &buf[i], len - i);
 		if(n < 0) return n;
 		else if(n == 0) break;
@@ -42,7 +43,7 @@ void serve_ssl(struct sockaddr *addr, socklen_t salen) {
 	int stdins[2];
 	int stdouts[2];
 	fd_set fds;
-	int n, m;
+	ssize_t n, m;
 	char buffer[16384];
 
 	if(pipe(stdins) < 0) {
@@ -103,7 +104,8 @@ void serve_ssl(struct sockaddr *addr, socklen_t salen) {
 
 		/* Pump data from client to handler */
 		if(FD_ISSET(0, &fds)) {
-			n = SSL_read(ssl, buffer, sizeof(buffer));
+			n = (ssize_t) SSL_read(ssl, buffer,
+				(int) sizeof(buffer));
 			if(n == 0) {
 				close(stdins[1]);
 				stdins[1] = -1;
@@ -111,7 +113,7 @@ void serve_ssl(struct sockaddr *addr, socklen_t salen) {
 				ssl_perror("SSL_read");
 				CLOSE_AND_EXIT(EXIT_FAILURE);
 			} else {
-				m = write_all(stdins[1], buffer, n);
+				m = write_all(stdins[1], buffer, (size_t) n);
 				if(m < 0) {
 					perror("write_all");
 					CLOSE_AND_EXIT(EXIT_FAILURE);
@@ -128,7 +130,7 @@ void serve_ssl(struct sockaddr *addr, socklen_t salen) {
 				perror("read");
 				CLOSE_AND_EXIT(EXIT_FAILURE);
 			} else {
-				m = SSL_write(ssl, buffer, n);
+				m = (ssize_t) SSL_write(ssl, buffer, (int) n);
 				if(m < 0) {
 					ssl_perror("SSL_write");
 					CLOSE_AND_EXIT(EXIT_FAILURE);

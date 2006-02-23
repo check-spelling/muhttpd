@@ -10,6 +10,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <libgen.h>
+#include <unistd.h>
 
 #define MAX_LINE_LENGTH 512
 
@@ -198,7 +199,7 @@ static struct muhttpd_config *ssl_port_directive(char *line, struct muhttpd_conf
 			stderr);
 		return NULL;
 	}
-	config->ssl_port = atoi(tok);
+	config->ssl_port = (in_port_t) atoi(tok);
 	if(get_next_token(&line))
 		fputs("WARNING: Stray token after ssl-port directive\n",
 			stderr);
@@ -224,7 +225,7 @@ static struct muhttpd_config *parse_config_line(char *line,
 				stderr);
 			return NULL;
 		}
-		config->port = atoi(tok);
+		config->port = (in_port_t) atoi(tok);
 		tok = get_next_token(&line);
 		if(tok) fputs("WARNING: Stray token after port directive\n",
 			stderr);
