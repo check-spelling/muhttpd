@@ -107,9 +107,9 @@ void invoke_handler(const char *handler, struct request *req) {
 		fputs("POST Request will trash server!\n", stderr);
 	}
 #endif
-	if(handler) execl(handler, handler, basename(p), NULL);
+	if(handler) execl(handler, handler, basename(p), (char*) NULL);
 #ifdef ENABLE_CGI
-	else execl(getenv("SCRIPT_FILENAME"), basename(p), NULL);
+	else execl(getenv("SCRIPT_FILENAME"), basename(p), (char*) NULL);
 #endif /* ENABLE_CGI */
 	free(p);
 

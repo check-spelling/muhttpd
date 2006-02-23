@@ -7,6 +7,7 @@
 #include <openssl/ssl.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 #endif
 
 #ifdef ENABLE_SSL

@@ -34,13 +34,17 @@
 
 /** Read request */
 static int read_request(char *buf, size_t len) {
-	int r, m = 0;
+	int r;
 	ssize_t n;
+	size_t m = 0;
 	struct timeval tv;
 	fd_set fds;
 
 	/* Loop until full request received */
 	for(;;) {
+		/* Make sure not to write outside the buffer */
+		if(m > len - 2) return HTTP_413;
+		
 		/* Wait for data */
 		FD_ZERO(&fds);
 		FD_SET(0, &fds);
