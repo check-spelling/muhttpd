@@ -1,5 +1,6 @@
 #include "flags.h"
 #include "socket.h"
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -13,7 +14,9 @@ SOCKET tcp_listen(short port) {
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == INVALID_SOCKET) return -1;
-	if(bind(sock, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
+	if(bind(sock, (struct sockaddr*) &addr,
+		(socklen_t) sizeof(addr)) < 0) {
+
 		closesocket(sock);
 		return -1;
 	}

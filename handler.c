@@ -44,7 +44,8 @@ void invoke_handler(const char *handler, struct request *req) {
 	if(!p) {
 		req->filename = message_file[HTTP_500];
 		req->status = HTTP_500;
-		return handle_request(req);
+		handle_request(req);
+		return;
 	}
 	sprintf(p, "%s%s", config->webdir, req->filename);
 	setenv("SCRIPT_FILENAME", p, 1);
@@ -68,7 +69,7 @@ void invoke_handler(const char *handler, struct request *req) {
 			setenv("CONTENT_TYPE", strdup(&p[14]), 1);
 		} else if(!strncmp(p, "Content-Length: ", 16)) {
 			setenv("CONTENT_LENGTH", strdup(&p[16]), 1);
-		} else if(r = strstr(p, ": ")) {
+		} else if((r = strstr(p, ": "))) {
 			/* Normal headers get HTTP_ prepended */
 			s = malloc(r - p + 6);
 			strncpy(s, "HTTP_", 5);
@@ -112,13 +113,13 @@ void invoke_handler(const char *handler, struct request *req) {
 	chdir(config->webdir);
 	req->filename = message_file[HTTP_500];
 	req->status = HTTP_500;
-	return handle_request(req);
+	handle_request(req);
 }
 #endif /* ENABLE_HANDLERS || ENABLE_CGI */
 
 #ifdef ENABLE_CGI
 /** Run a CGI script */
 void run_cgi(struct request *req) {
-	return invoke_handler(NULL, req);
+	invoke_handler(NULL, req);
 }
 #endif /* ENABLE_CGI */

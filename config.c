@@ -2,6 +2,9 @@
 #define CONFIG_C
 #include "config.h"
 #include "memory.h"
+#ifdef ENABLE_SSL
+#include "ssl.h"
+#endif
 #include <string.h>
 #include <stdio.h>
 #include <pwd.h>

@@ -1,4 +1,5 @@
 #include "serve.h"
+#include "request.h"
 #include <unistd.h>
 #ifdef ENABLE_SSL
 #include "config.h"
@@ -15,7 +16,6 @@
 	SSL_shutdown(ssl); \
 	SSL_free(ssl); \
 	exit(X)
-#endif
 
 static int write_all(int fd, char *buf, int len) {
 	int i = 0, n;
@@ -27,6 +27,7 @@ static int write_all(int fd, char *buf, int len) {
 	}
 	return i;
 }
+#endif
 
 void serve(struct sockaddr *addr, socklen_t salen) {
 	/* dup connection on stdout */
@@ -94,8 +95,6 @@ void serve_ssl(struct sockaddr *addr, socklen_t salen) {
 		if(stdins[1] != -1) FD_SET(0, &fds);
 		FD_SET(stdouts[0], &fds);
 
-		fprintf(stderr, "Waiting for data\n");
-
 		if(select(stdouts[0] + 1, &fds, NULL, NULL, NULL) < 0) {
 			if(errno == EINTR) continue;
 			perror("select");
@@ -106,14 +105,12 @@ void serve_ssl(struct sockaddr *addr, socklen_t salen) {
 		if(FD_ISSET(0, &fds)) {
 			n = SSL_read(ssl, buffer, sizeof(buffer));
 			if(n == 0) {
-				fprintf(stderr, "EOF from client\n");
 				close(stdins[1]);
 				stdins[1] = -1;
 			} else if(n < 0) {
 				ssl_perror("SSL_read");
 				CLOSE_AND_EXIT(EXIT_FAILURE);
 			} else {
-				fprintf(stderr, "client->handler\n");
 				m = write_all(stdins[1], buffer, n);
 				if(m < 0) {
 					perror("write_all");
@@ -126,13 +123,11 @@ void serve_ssl(struct sockaddr *addr, socklen_t salen) {
 		if(FD_ISSET(stdouts[0], &fds)) {
 			n = read(stdouts[0], buffer, sizeof(buffer));
 			if(n == 0) {
-				fprintf(stderr, "EOF from handler\n");
 				CLOSE_AND_EXIT(EXIT_SUCCESS);
 			} else if(n < 0) {
 				perror("read");
 				CLOSE_AND_EXIT(EXIT_FAILURE);
 			} else {
-				fprintf(stderr, "handler->client\n");
 				m = SSL_write(ssl, buffer, n);
 				if(m < 0) {
 					ssl_perror("SSL_write");
