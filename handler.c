@@ -18,6 +18,14 @@
 
 #define BUFSIZE 4096
 
+/** Send internal server error */
+static void internal_server_error(struct request *req) {
+	chdir(current_config->webdir);
+	req->filename = message_file[HTTP_500];
+	req->status = HTTP_500;
+	handle_request(req);
+}
+
 #if defined(ENABLE_HANDLERS) || defined(ENABLE_CGI)
 /** Invoke a handler for a requested object */
 void invoke_handler(const char *handler, struct request *req) {
@@ -76,6 +84,11 @@ void invoke_handler(const char *handler, struct request *req) {
 		} else if((r = strstr(p, ": "))) {
 			/* Normal headers get HTTP_ prepended */
 			s = malloc((size_t) (r - p + 6));
+			if(!s) {
+				perror("malloc");
+				internal_server_error(req);
+				exit(EXIT_FAILURE);
+			}
 			strncpy(s, "HTTP_", 5);
 			strncpy(s + 5, p, (size_t) (r - p));
 			s[r - p + 5] = 0;
@@ -113,11 +126,7 @@ void invoke_handler(const char *handler, struct request *req) {
 #endif /* ENABLE_CGI */
 	free(p);
 
-	/* Send internal server error */
-	chdir(config->webdir);
-	req->filename = message_file[HTTP_500];
-	req->status = HTTP_500;
-	handle_request(req);
+	internal_server_error(req);
 }
 #endif /* ENABLE_HANDLERS || ENABLE_CGI */
 

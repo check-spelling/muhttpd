@@ -131,6 +131,8 @@ void do_request(struct sockaddr *addr, socklen_t salen) {
 	if(!p) {
 		req.filename = message_file[HTTP_400];
 		req.status = HTTP_400;
+		handle_and_log_request(&req);
+		exit(EXIT_FAILURE);
 	}
 	*p = 0;
 	req.method = buf;
