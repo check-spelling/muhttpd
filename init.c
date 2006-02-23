@@ -8,9 +8,11 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #ifdef ENABLE_SSL
 #include "ssl.h"
 #endif

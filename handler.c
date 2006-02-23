@@ -35,7 +35,8 @@ void invoke_handler(const char *handler, struct request *req) {
 	setenv("REMOTE_ADDR", inet_ntoa(req->remote_addr.sin_addr), 1);
 	p = strchr(req->uri, '?');
 	if(p) {
-		setenv("SCRIPT_NAME", strndup(req->uri, p - req->uri), 1);
+		setenv("SCRIPT_NAME", strndup(req->uri,
+			(size_t) (p - req->uri)), 1);
 		setenv("QUERY_STRING", p + 1, 1);
 	} else {
 		setenv("SCRIPT_NAME", req->uri, 1);
@@ -71,9 +72,9 @@ void invoke_handler(const char *handler, struct request *req) {
 			setenv("CONTENT_LENGTH", strdup(&p[16]), 1);
 		} else if((r = strstr(p, ": "))) {
 			/* Normal headers get HTTP_ prepended */
-			s = malloc(r - p + 6);
+			s = malloc((size_t) (r - p + 6));
 			strncpy(s, "HTTP_", 5);
-			strncpy(s + 5, p, r - p);
+			strncpy(s + 5, p, (size_t) (r - p));
 			s[r - p + 5] = 0;
 			/* Transform variable name */
 			for(t = s + 5; *t; t++) {

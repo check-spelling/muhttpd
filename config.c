@@ -359,8 +359,8 @@ static struct muhttpd_config *parse_config_line(char *line,
 		return config;
 	} else if(!strcmp(tok, "index")) {
 		while((tok = get_next_token(&line))) {
-			p = realloc(config->index,
-				(config->indices + 1) * sizeof(char*));
+			p = realloc(config->index, (size_t)
+				((config->indices + 1) * sizeof(char*)));
 			if(!p) {
 				fputs("ERROR: Error adding index", stderr);
 				config = NULL;

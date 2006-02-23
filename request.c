@@ -329,7 +329,7 @@ void handle_request(struct request *req) {
 	while((n = (int) read(fd, buf, BUFSIZE)) > 0) {
 		p = buf;
 		do {
-			m = write(1, p, n);
+			m = write(1, p, (size_t) n);
 			if(m <= 0) break;
 			p += m;
 			n -= m;
