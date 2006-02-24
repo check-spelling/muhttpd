@@ -2,6 +2,7 @@
 #define SOCKET_H
 
 #include <sys/types.h>
+#include <netinet/in.h>
 #include <unistd.h>
 
 #define SOCKET int
