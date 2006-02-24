@@ -63,6 +63,9 @@ void serve_ssl(struct sockaddr *addr, socklen_t salen) {
 		exit(EXIT_FAILURE);
 	}
 
+	/* Set HTTPS environment variable */
+	putenv("HTTPS=true");
+
 	pid = fork();
 	if(pid < 0) {
 		perror("fork");
