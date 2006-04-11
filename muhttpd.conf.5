@@ -29,6 +29,15 @@ index is requested. The first matching \fIname\fR is used
 \fBport\fR \fIn\fR
 Listen for connections on port \fIn\fR
 .TP
+\fBssl-cert\fR \fIfile\fR
+Use \fIfile\fR as SSL certificate file
+.TP
+\fBssl-key\fR \fIfile\fR
+Use \fIfile\fR as SSL private key file
+.TP
+\fBssl-port\fR \fIn\fR
+Listen for SSL (HTTPS) connections on port \fIn\fR
+.TP
 \fBtype\fR \fItype\fR \fIext ...\fR
 Treat files whose names end in one of 
 the strings in \fIext\fR as if they were of MIME type \fItype\fR
@@ -49,6 +58,9 @@ logfile /var/log/muhttpd/logfile
 user www
 group www 
 index index.html index.php
+ssl-cert /etc/muhttpd/muhttpd.cert
+ssl-key /etc/muhttpd/muhttpd.key
+ssl-port 443
 
 type text/html .html
 type text/css .css
