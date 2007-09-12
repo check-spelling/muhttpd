@@ -10,7 +10,7 @@ muhttpd : $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LIBS)
 
 clean :
-	-rm $(OBJECTS)
+	-rm $(OBJECTS) config.log
 
 distclean : clean
 	-rm $(TARGETS)

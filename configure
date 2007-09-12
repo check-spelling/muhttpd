@@ -1,7 +1,9 @@
 #! /bin/sh
 
 # Version
-version=1.1.0
+version=1.1.1
+
+[ ! -e config.log ] || rm config.log
 
 # Defaults
 background=yes
@@ -11,7 +13,7 @@ logging=yes
 mime=yes
 pidfile=yes
 setuid=yes
-ssl=yes
+ssl=auto
 prefix='/usr/local'
 packagedirsfx='/share/$(PACKAGE)-$(VERSION)'
 sbindir='$(PREFIX)/sbin'
@@ -20,6 +22,10 @@ mandir='$(PREFIX)/man'
 logdir='/var/log'
 need_clearenv=yes
 need_strndup=yes
+
+# Some useful variables
+[ -n "$TMPDIR" ] || TMPDIR=/tmp
+[ -n "$CC" ] || CC=cc
 
 # Command line options override defaults
 while [ ! "$1." = '.' ]
@@ -143,6 +149,49 @@ do
 	shift
 done 
 
+# Detect settings that were set to "auto"
+
+# Detect SSL support
+
+if [ "$ssl" = "auto" ]
+then
+	printf "Detecting SSL support..."
+
+	# Try OpenSSL
+	ssl_libs="-lssl -lcrypto"
+
+	# Write test program
+
+	prog="$TMPDIR/ssl_test.c"
+	cat > "$prog" <<EOT
+#include <openssl/ssl.h>
+
+int main(int argc, char **argv) {
+	SSL_library_init();
+	return 0;
+}
+EOT
+	# Try compiling program
+	echo "Compiling OpenSSL test program" >> config.log
+	$CC $CFLAGS "$prog" $LIBS $ssl_libs 2>> config.log
+	success=$?
+	echo "Done compiling OpenSSL test program" >> config.log
+
+	if [ $success -eq 0 ]
+	then
+		ssl=yes
+		echo "OpenSSL"
+	else
+		ssl=no
+		echo "not found"
+		echo " * You may want to install OpenSSL to enable SSL support."
+		echo
+	fi
+
+	# Clean up
+	rm "$prog" a.out 2> /dev/null
+fi
+
 # Print summary
 echo "Features:"
 echo "Backgrounding:	$background"
@@ -165,7 +214,7 @@ objects='main.o globals.o init.o socket.o request.o status.o config.o serve.o'
 if [ $ssl = 'yes' ]
 then
 	objects="$objects ssl.o"
-	LIBS="$LIBS -lssl -lcrypto"
+	LIBS="$LIBS $ssl_libs"
 fi
 
 ## Generate Makefile.cfg
