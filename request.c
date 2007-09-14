@@ -353,9 +353,9 @@ void handle_request(struct request *req) {
 }
 
 void handle_and_log_request(struct request *req) {
-	handle_request(req);
-
 #ifdef ENABLE_LOGGING
 	if(current_config->logfile) log_request(req);
 #endif
+
+	handle_request(req);
 }
