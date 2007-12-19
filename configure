@@ -1,7 +1,7 @@
 #! /bin/sh
 
 # Version
-version=1.1.1
+version=1.1.2
 
 [ ! -e config.log ] || rm config.log
 
@@ -220,7 +220,7 @@ fi
 ## Generate Makefile.cfg
 
 cat > Makefile.cfg <<EOT
-CFLAGS += $CFLAGS
+CFLAGS ?= $CFLAGS
 LIBS += $LIBS
 
 VERSION = $version
