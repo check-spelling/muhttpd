@@ -19,7 +19,7 @@ SOCKET ssl_sock;
 static void accept_from(SOCKET sock, int ssl) {
 	SOCKET conn;
 	struct sockaddr saddr;
-	socklen_t salen;
+	socklen_t salen = sizeof(saddr);
 	pid_t pid;
 
 	conn = accept(sock, &saddr, &salen);
