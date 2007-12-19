@@ -28,4 +28,6 @@ void log_request(const struct request *req) {
 			inet_ntoa(req->remote_addr.sin_addr),
 			req->method, req->uri);	
 	}
+
+	fflush(current_config->logfile);
 }
