@@ -20,7 +20,9 @@
 
 /** Send internal server error */
 static void internal_server_error(struct request *req) {
-	chdir(current_config->webdir);
+        if(chdir(current_config->webdir)) {
+	  perror(current_config->webdir);
+	}
 	req->filename = message_file[HTTP_500];
 	req->status = HTTP_500;
 	handle_request(req);
@@ -105,7 +107,10 @@ void invoke_handler(const char *handler, struct request *req) {
 
 	/* Change directory */
 	p = strdup(&req->filename[1]);
-	chdir(dirname(p));
+	if(chdir(dirname(p))) {
+	  perror(dirname(p));
+	  internal_server_error(req);
+	}
 	free(p);
 
 	/* Get filename part */
@@ -115,11 +120,7 @@ void invoke_handler(const char *handler, struct request *req) {
 	printf("HTTP/1.1 %s\r\nConnection: close\r\n",
 		message[req->status]);
 	fflush(stdout);
-#if 0
-	if(!strcmp(req->method, "POST")) {
-		fputs("POST Request will trash server!\n", stderr);
-	}
-#endif
+
 	if(handler) execl(handler, handler, basename(p), (char*) NULL);
 #ifdef ENABLE_CGI
 	else execl(getenv("SCRIPT_FILENAME"), basename(p), (char*) NULL);

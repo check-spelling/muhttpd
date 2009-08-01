@@ -24,7 +24,7 @@ void log_request(const struct request *req) {
 			req->method, req->uri);	
 	} else {
 		fprintf(current_config->logfile,
-			"??-??-?? ??:??:??\t%s\t%s %s\n",
+			"?\?-?\?-?\? ?\?:?\?:?\?\t%s\t%s %s\n",
 			inet_ntoa(req->remote_addr.sin_addr),
 			req->method, req->uri);	
 	}

@@ -87,7 +87,10 @@ void init(int argc, char **argv) {
 	}
 
 	set_current_config(config);
-	chdir(config->webdir);
+	if(chdir(config->webdir)) {
+	  perror(config->webdir);
+	  exit(EXIT_FAILURE);
+	}
 
 	/* Set up the environment */
 	clearenv();

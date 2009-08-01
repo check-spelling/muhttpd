@@ -33,7 +33,10 @@ static ssize_t write_all(int fd, char *buf, size_t len) {
 
 void serve(struct sockaddr *addr, socklen_t salen) {
 	/* dup connection on stdout */
-	dup(0);
+        if(dup(0) < 0) {
+	  perror("dup");
+	  exit(EXIT_FAILURE);
+	}
 	do_request(addr, salen);
 }
 
@@ -81,12 +84,18 @@ void serve_ssl(struct sockaddr *addr, socklen_t salen) {
 
 		/* move read end of stdins to 0 */
 		close(0);
-		dup(stdins[0]);
+		if(dup(stdins[0]) < 0) {
+		  perror("dup");
+		  exit(EXIT_FAILURE);
+		}
 		close(stdins[0]);
 
 		/* move write end of stdouts to 1 */
 		close(1);
-		dup(stdouts[1]);
+		if(dup(stdouts[1]) < 0) {
+		  perror("dup");
+		  exit(EXIT_FAILURE);
+		}
 		close(stdouts[1]);
 
 		/* handle request */
