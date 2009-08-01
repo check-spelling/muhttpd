@@ -28,7 +28,7 @@ static void accept_from(SOCKET sock, int ssl) {
 	pid = fork();
 	if(pid < 0) {
 		perror("fork");
-	} else if(pid) {
+	} else if(!pid) {
 #ifdef ENABLE_SSL
 		if(ssl) serve_ssl(&saddr, salen);
 		else serve(&saddr, salen);
