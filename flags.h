@@ -5,6 +5,6 @@
 #define ENABLE_LOGGING
 #define ENABLE_PIDFILE
 #define ENABLE_SSL
-#define VERSION 1.1.1
-#define SERVER_SOFTWARE "muhttpd/1.1.1"
+#define VERSION 1.1.2
+#define SERVER_SOFTWARE "muhttpd/1.1.2"
 #define CONFIGFILE "/etc/muhttpd/muhttpd.conf"
