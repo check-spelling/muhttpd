@@ -61,11 +61,11 @@ The configure script accepts the following options:
 --enable-<feature>
 	Include <feature>. See --disable-<feature> for more info.
 
---disable-all
+--disable-everything
 	Disable all features. Individual features can still be enabled 
 	with --enable-<feature>.
 
---enable-all
+--enable-everything
 	Enable all features. Individual features can be disabled with
 	--disable-feature.
 
