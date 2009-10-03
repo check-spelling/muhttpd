@@ -1,11 +1,12 @@
 #include "serve.h"
 #include "request.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #ifdef ENABLE_SSL
 #include "config.h"
 #include "ssl.h"
 #include <openssl/ssl.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #endif
