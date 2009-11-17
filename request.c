@@ -75,32 +75,125 @@ static int read_request(char *buf, size_t len) {
 	return 0;
 }
 
+/** If the final path component of filename is "." or "..", correct it.
+ * "/." or "." is removed, whereas "/.." or ".." results in both that
+ * component and the previous component (if any) being removed.
+ * The components are not actually removed from filename, but the function
+ * returns a new value for n, which is the next index in filename that
+ * should be written (either to extend the name, or to terminate it with
+ * a NUL byte).
+ *
+ * Notes:
+ * 1. Do not include a trailing slash in filename.
+ * 2. Set n to the index _after_ the last byte in filename.
+ * 3. Use the return value.
+ *
+ * @param filename the filename to sanitize
+ * @param n index of the next byte of filename to be written
+ *          (one more than the length of the filename)
+ * @return index of the next byte to be written, after sanitation
+ */
+static int sanitize_path(const char *filename, int n) {
+	if(n > 0) {
+		if(filename[n - 1] == '.') {
+			if(n <= 1) {
+				/* Filename is ".";
+				 * point n at first byte.
+				 */
+				n = 0;
+			} else if(filename[n - 2] == '/') {
+				/* Last path component is ".";
+				 * point n to slash.
+				 */
+				n -= 2;
+			} else if(filename[n - 2] == '.') {
+				if(n <= 2) {
+					/* Filename is "..";
+					 * point n at first byte.
+					 */
+					n = 0;
+				} else if(filename[n - 3] == '/') {
+					/* Last path component is "..";
+					 * point n at slash before previous
+					 * component, or first byte if
+					 * there is no such slash.
+					 */
+					n = n - 3;
+					while(n > 0) {
+						n--;
+						if(filename[n] == '/') break;
+					}
+				}
+			}
+		}
+	}
+	return n;
+}
+
 /** Decode URL to filename */
 static char *decode_url(const char *url, char *filename, size_t len) {
-	char *p = (char*) url, *q = filename, *r = filename + len;
+	int n = 0, m = 0;
+	char c, k;
 
-	while(*p) {
-		if(*p == '+') *q = ' ';
-		else if(*p == '?') break;
-		else if(*p == '%') {
-			p++;
-			if('0' <= *p && *p <= '9') *q = *p - '0';
-			else *q = (*p & ~32) - '7';
-			*q = *q << 4;
-			p++;
-			if('0' <= *p && *p <= '9') *q |= *p - '0';
-			else *q |= (*p & ~32) - '7';
+	while((c = url[n])) {
+		/* Question mark marks the end of the path and the beginning
+		 * of the query string. */
+		if(c == '?') break;
+
+		/* Decode urlencoded characters. */
+		if(c == '+') {
+			c = ' ';
+		} else if(c == '%') {
+			/* Decode first hexit */
+			k = url[++n];
+			if('0' <= k && k <= '9') c = k - '0';
+			else c = (k & ~32) - '7';
+			c = c << 4;
+			/* Decode second hexit */
+			k = url[++n];
+			if('0' <= k && k <= '9') c |= k - '0';
+			else c |= (k & ~32) - '7';
 		}
-		else *q = *p;
-		q++;
-		p++;
-		if(q == r && *p) {
+
+		/* Directory separator */
+		if(c == '/') {
+			/* No special processing needed if this is the
+			 * first character in filename.
+			 */
+			if(m) {
+				/* If filename already ends in a slash,
+				 * overwrite that one with the present one.
+				 */
+				if(filename[m - 1] == '/') m--;
+				else {
+					/* We have completed reading a
+					 * path component. Sanitive
+					 * filename before adding
+					 * directory separator.
+					 */
+					m = sanitize_path(filename, m);
+				}
+			}
+		}
+
+		/* Add character to filename, increase indices. */
+		filename[m] = c;
+		n++;
+		m++;
+
+		if(m >= len) {
 			errno = ENAMETOOLONG;
 			return NULL;
 		}
 	}
 
-	*q = 0;
+	/* If filename doesn't end in a slash, it still needs sanitizing. */
+	if(m && filename[m - 1] != '/') {
+		m = sanitize_path(filename, m);
+	}
+
+	/* Add terminating NUL byte and return filename. */
+	filename[m] = 0;
 	return filename;
 }
 
@@ -199,7 +292,7 @@ void handle_request(struct request *req) {
 	}
 
 	/* Use ./ for root directory */
-	if(!req->filename[1]) req->filename = "/./";
+	if(!req->filename[1] || !req->filename[0]) req->filename = "/./";
 
 	/* stat file */
 	if(stat(&req->filename[1], &stats) < 0) {
