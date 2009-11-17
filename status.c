@@ -20,7 +20,7 @@ char *message_file[sizeof(message) / sizeof(char*)];
 
 void send_status_message(struct request *req) {
 	printf("HTTP/1.1 %s\r\nContent-Type: text/html\r\n"
-		"Conection: close\r\n", message[req->status]);
+		"Connection: close\r\n", message[req->status]);
 	if(req->location) printf("Location: %s\r\n\r\n"
 		"<html>\n<head>\n<title>%s</title>\n</head>\n"
 		"<body>\n<h1>%s</h1>\n<p>Object has moved to <a href=\"%s\">"
