@@ -88,8 +88,8 @@ void init(int argc, char **argv) {
 
 	set_current_config(config);
 	if(chdir(config->webdir)) {
-	  perror(config->webdir);
-	  exit(EXIT_FAILURE);
+		perror(config->webdir);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Set up the environment */

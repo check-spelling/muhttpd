@@ -20,8 +20,8 @@
 
 /** Send internal server error */
 static void internal_server_error(struct request *req) {
-        if(chdir(current_config->webdir)) {
-	  perror(current_config->webdir);
+	if(chdir(current_config->webdir)) {
+		perror(current_config->webdir);
 	}
 	req->filename = message_file[HTTP_500];
 	req->status = HTTP_500;
@@ -108,8 +108,8 @@ void invoke_handler(const char *handler, struct request *req) {
 	/* Change directory */
 	p = strdup(&req->filename[1]);
 	if(chdir(dirname(p))) {
-	  perror(dirname(p));
-	  internal_server_error(req);
+		perror(dirname(p));
+		internal_server_error(req);
 	}
 	free(p);
 

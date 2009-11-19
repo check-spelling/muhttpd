@@ -419,8 +419,8 @@ struct muhttpd_config *read_config_file(const char *file,
 	char line[MAX_LINE_LENGTH], *dir, olddir[PATH_MAX];
 
 	if(!getcwd(olddir, PATH_MAX)) {
-	  perror("getcwd");
-	  return NULL;
+		perror("getcwd");
+		return NULL;
 	}
 
 	dir = strdup(file);
@@ -436,7 +436,7 @@ struct muhttpd_config *read_config_file(const char *file,
 	if(!fp) {
 		free(dir);
 		if(chdir(olddir)) {
-		  perror(olddir);
+			perror(olddir);
 		}
 		return NULL;
 	}
@@ -456,7 +456,7 @@ struct muhttpd_config *read_config_file(const char *file,
 	}
 
 	if(chdir(olddir)) {
-	  perror(olddir);
+		perror(olddir);
 	}
 
 	return config;
