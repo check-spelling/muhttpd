@@ -443,6 +443,7 @@ void handle_request(struct request *req) {
 		} while(n);
 		if(m <= 0) break;
 	}
+	close(fd);
 }
 
 void handle_and_log_request(struct request *req) {

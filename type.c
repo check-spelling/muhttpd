@@ -37,7 +37,10 @@ struct file_type *register_file_type(const char *name, const char *handler) {
 	if(!foo) return NULL;
 
 	foo->type = new(struct file_type);
-	if(!foo->type) return NULL;
+	if(!foo->type) {
+		free(foo);
+		return NULL;
+	}
 
 	foo->type->mime_name = (char*) name;
 	foo->type->handler = (char*) handler;

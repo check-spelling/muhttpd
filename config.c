@@ -459,6 +459,8 @@ struct muhttpd_config *read_config_file(const char *file,
 		perror(olddir);
 	}
 
+	fclose(fp);
+
 	return config;
 }
 
