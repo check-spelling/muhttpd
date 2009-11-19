@@ -1,4 +1,4 @@
-.TH muhttpd.conf 5 2005-06-02
+.TH muhttpd.conf 5 2009-11-18
 .SH NAME
 .B muhttpd.conf
 \- configuration file for \fBmuhttpd\fR
@@ -46,10 +46,14 @@ the strings in \fIext\fR as if they were of MIME type \fItype\fR
 Switch to \fIusername\fR before starting to accept connections
 .TP
 \fBwebdir\fR \fIpath\fR
-Use \fIpath\fR as the directory containing the web pages
+Use \fIpath\fR as the directory containing the web pages.
+If \fBwebroot\fR is also specified, \fBwebdir\fR is relative to the
+new root directory
 .TP
 \fBwebroot\fR \fIpath\fR
-chroot(2) to path
+chroot(2) to path.
+This will cause muhttpd to only have access to files in the directory
+tree rooted at \fIpath\fR
 .SH EXAMPLE
 .nf
 port 80

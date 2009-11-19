@@ -78,6 +78,7 @@ void init(int argc, char **argv) {
 		}
 	}
 
+	/* Load configuration from config_file, storing it into config. */
 	if(!read_config_file(config_file, config)) {
 		fprintf(stderr, 
 			"ERROR: Error loading configuration from \"%s\"\n",
@@ -86,11 +87,29 @@ void init(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
+	/* Make the configuration we just loaded the global configuration. */
 	set_current_config(config);
-	if(chdir(config->webdir)) {
-		perror(config->webdir);
-		exit(EXIT_FAILURE);
-	}
+ 
+	/* If config->webroot is set, chroot to it. */
+ 	if(config->webroot) {
+ 		if(chroot(config->webroot)) {
+ 			fprintf(stderr, "chroot to %s: %s\n",
+ 				config->webroot, strerror(errno));
+ 			exit(EXIT_FAILURE);
+ 		}
+ 
+ 		if(chdir("/")) {
+ 			perror("chdir to new root directory");
+ 			exit(EXIT_FAILURE);
+ 		}
+ 	}
+ 
+	/* Change directory to config->webdir. */
+ 	if(chdir(config->webdir)) {
+ 		fprintf("chdir to %s: %s\n",
+ 			config->webdir, strerror(errno));
+ 		exit(EXIT_FAILURE);
+ 	}
 
 	/* Set up the environment */
 	clearenv();
