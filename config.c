@@ -5,6 +5,7 @@
 #ifdef ENABLE_SSL
 #include "ssl.h"
 #endif
+#include <ctype.h>
 #include <string.h>
 #include <stdio.h>
 #include <pwd.h>
@@ -12,7 +13,8 @@
 #include <libgen.h>
 #include <unistd.h>
 
-#define MAX_LINE_LENGTH 512
+#define MAX_LINE_LENGTH 16384
+#define MAX_TOKEN_SIZE 512
 
 #ifndef PATH_MAX
 #define PATH_MAX 255
@@ -24,18 +26,112 @@
 
 struct muhttpd_config *current_config = NULL;
 
-/** Get the next token, or NULL if no more tokens are found */
+/** Get the next token, or NULL if no more tokens are found.
+ * The token is stored in static storage, so be sure to copy it
+ * (e.g. using strdup) if you need to preserve the value.
+ */
 static char *get_next_token(char **str) {
-	char *tok;
+	static char tok[MAX_TOKEN_SIZE], *p;
+	int i = 0, n = 0;
 
-	do {
-		tok = strsep(str, " \t\r\n");
-		if(!tok) break; /* break when EOL reached */
-	} while(!tok[0]); 
+	p = *str;
 
-	if(!tok) return NULL;
-	else if(tok[0] == '#') return NULL; /* Comments are ignored */
-	else return tok;
+	/* Loop until the end of p is reached. */
+	while(p[i]) {
+		if(p[i] == '\\') {
+			/* Escape sequence; decode. */
+			i++;
+			switch(p[i]) {
+			case ' ':
+			case '\t':
+			case '\\':
+			case '"':
+			case '#':
+				tok[n++] = p[i++];
+				break;
+			case 'n':
+				i++;
+				tok[n++] = '\n';
+				break;
+			case 'r':
+				i++;
+				tok[n++] = '\r';
+				break;
+			case 't':
+				i++;
+				tok[n++] = '\t';
+				break;
+			case 'x':
+				i++;
+				if(isdigit(p[i])) {
+					tok[n] = p[i] - '0';
+				} else if(isalpha(p[i])) {
+					tok[n] = (p[i] & ~32) - '7';
+				} else {
+					fprintf(stderr, "ERROR: "
+						"\\x must be followed "
+						"by two hexadecimal digits\n");
+					return NULL;
+				}
+				tok[n] = tok[n] << 4;
+				i++;
+				if(isdigit(p[i])) {
+					tok[n] |= p[i] - '0';
+				} else if(isalpha(p[i])) {
+					tok[n] |= (p[i] & ~32) - '7';
+				} else {
+					fprintf(stderr, "ERROR: "
+						"\\x must be followed "
+						"by two hexadecimal digits\n");
+					return NULL;
+				}
+				i++;
+				n++;
+				break;
+			default:
+				/* Invalid escape sequence. */
+				if(isgraph(p[i])) {
+					fprintf(stderr,
+						"ERROR: "
+						"Invalid escape sequence: "
+						"\\\\%c\n", p[i]);
+				} else {
+					fprintf(stderr,
+						"ERROR: "
+						"Invalid escape sequence: "
+						"\\\\\\%02x\n", p[i]);
+				}
+				return NULL;
+			}
+		} else if(p[i] == '#') {
+			/* Comment, skip this line. */
+			return NULL;
+		} else if(p[i] == '\n' || p[i] == '\r') {
+			/* Newline, nothing more to parse. */
+			break;
+		} else if(isspace(p[i])) {
+			/* Whitespace separates tokens. If we don't
+			 * have a token yet, ignore whitespace. Otherwise,
+			 * return what we have.
+			 */
+			if(n) break;
+			else i++;
+		} else {
+			/* Regular character; copy literally. */
+			tok[n++] = p[i++];
+		}
+	}
+	
+	/* Update str. */
+	*str = &p[i + 1];
+
+	/* If no characters are in token, return NULL. */
+	if(!n) return NULL;
+
+	/* NUL-terminate tok. */
+	tok[n++] = 0;
+
+	return tok;
 }
 
 #ifndef DISABLE_SETUID
