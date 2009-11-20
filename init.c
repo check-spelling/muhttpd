@@ -106,7 +106,7 @@ void init(int argc, char **argv) {
  
 	/* Change directory to config->webdir. */
  	if(chdir(config->webdir)) {
- 		fprintf("chdir to %s: %s\n",
+		fprintf(stderr, "chdir to %s: %s\n",
  			config->webdir, strerror(errno));
  		exit(EXIT_FAILURE);
  	}
