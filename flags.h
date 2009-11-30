@@ -1,4 +1,9 @@
 /* Compile time options */
+
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
+#endif
+
 #define ENABLE_BACKGROUND
 #define ENABLE_CGI
 #define ENABLE_HANDLERS

@@ -6,6 +6,8 @@
 #include "handler.h"
 #include "config.h"
 #include "status.h"
+#include "stracat.h"
+#include "setenv.h"
 #include "strndup.h"
 #include <stdlib.h>
 #include <libgen.h>
@@ -51,17 +53,8 @@ void invoke_handler(const char *handler, struct request *req) {
 	} else {
 		setenv("SCRIPT_NAME", req->uri, 1);
 	}
-	/* Allocate memory for sprintf */
-	p = malloc(strlen(config->webdir) + strlen(req->filename) + 1);
-	if(!p) {
-		req->filename = message_file[HTTP_500];
-		req->status = HTTP_500;
-		handle_request(req);
-		return;
-	}
-	/*@-bufferoverflowhigh@*/
-	sprintf(p, "%s%s", config->webdir, req->filename);
-	/*@=bufferoverflowhigh@*/
+	/* Concatenate webdir and filename. */
+	p = stracat(config->webdir, req->filename);
 	setenv("SCRIPT_FILENAME", p, 1);
 	setenv("REDIRECT_STATUS", message[req->status], 1);
 

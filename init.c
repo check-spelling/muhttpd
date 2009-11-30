@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "globals.h"
 #include "clearenv.h"
+#include "setenv.h"
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>

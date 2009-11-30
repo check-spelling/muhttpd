@@ -21,6 +21,7 @@ sysconfdir='/etc'
 mandir='$(PREFIX)/man'
 logdir='/var/log'
 need_clearenv=yes
+need_setenv=yes
 need_strndup=yes
 
 # Some useful variables
@@ -106,6 +107,12 @@ do
 	;;
 	--without-clearenv)
 		need_clearenv=no
+	;;
+	--with-setenv)
+		need_setenv=yes
+	;;
+	--without-setenv)
+		need_setenv=no
 	;;
 	--with-strndup)
 		need_strndup=yes
@@ -204,10 +211,11 @@ echo "Set uid/gid:	$setuid"
 echo "SSL support:	$ssl"
 
 # Select objects to be compiled in
-objects='main.o globals.o init.o socket.o request.o status.o config.o serve.o'
+objects='main.o stracat.o globals.o init.o socket.o request.o status.o config.o serve.o'
 
-[ $need_strndup = 'yes' ] && objects="$objects strndup.o"
 [ $need_clearenv = 'yes' ] && objects="$objects clearenv.o"
+[ $need_setenv = 'yes' ] && objects="$objects setenv.o"
+[ $need_strndup = 'yes' ] && objects="$objects strndup.o"
 [ $cgi = 'yes' -o $handlers = 'yes' ] && objects="$objects handler.o"
 [ $logging = 'yes' ] && objects="$objects log.o"
 [ $mime = 'yes' ] && objects="$objects type.o"
@@ -240,6 +248,11 @@ EOT
 ## Generate flags.h
 cat > flags.h <<EOT
 /* Compile time options */
+
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
+#endif
+
 EOT
 [ $background = 'yes' ] && echo "#define ENABLE_BACKGROUND" >> flags.h
 [ $cgi = 'yes' ] && echo "#define ENABLE_CGI" >> flags.h
