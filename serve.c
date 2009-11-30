@@ -9,6 +9,7 @@
 #include <openssl/ssl.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/select.h>
 #endif
 
 #ifdef ENABLE_SSL
