@@ -9,8 +9,12 @@ all : $(TARGETS)
 muhttpd : $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LIBS)
 
+check : muhttpd
+	cd test && ./test
+
 clean :
 	-rm $(OBJECTS) config.log
+	-cd test && rm test.conf muhttpd_test.log muhttpd_test.pid
 
 distclean : clean
 	-rm $(TARGETS)
@@ -80,4 +84,4 @@ love :
 .SUFFIXES : .c .o
 
 .PHONY : all clean distclean install install-package install-bin install-etc \
-	install-man love
+	install-man love test

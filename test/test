@@ -1,0 +1,159 @@
+#! /bin/sh
+
+port=5888
+ssl_port=5999
+webdir="$PWD/webdir"
+user="$(id -u -n)"
+group="$(id -g -n)"
+
+logfile="$PWD/muhttpd_test.log"
+pidfile="$PWD/muhttpd_test.pid"
+
+errors=0
+
+#
+# Functions
+#
+
+# Reports an error
+error() {
+    echo "ERROR: $@"
+    errors="$(expr $errors + 1)"
+}
+
+# Report results and exit
+finish() {
+    # If we have a pid, kill the process
+    [ -n "$muhttpd_pid" ] && kill "$muhttpd_pid"
+
+    if [ $errors -eq 0 ]; then
+	echo All tests passed
+	exit
+    else
+	echo $errors test failures
+	exit 1
+    fi
+}
+
+# Performs a GET request
+get() {
+    uri="$1"
+    printf 'GET %s\r\nHost: localhost:%u\r\n\r\n' "$uri" "$port" \
+      | nc localhost $port
+}
+
+# Gets the body from an HTTP response.
+body() {
+    echo "$1" | awk 'BEGIN { p = 0 }; p {print}; $0 == "\r" { p = 1 }'
+}
+
+# Gets the header from an HTTP response.
+header() {
+    echo "$1" | awk '$0 == "\r" { exit }; {print}'
+}
+
+#
+# Main program
+#
+
+# Remove files muhttpd should create
+[ ! -f "$logfile" ] || rm "$logfile"
+[ ! -f "$pidfile" ] || rm "$pidfile"
+
+# Write configuration file
+cat > test.conf <<EOF
+port $port
+ssl-port $ssl_port
+
+webdir $webdir
+user $user
+group $group
+
+index index.html index.cgi
+
+logfile $logfile
+pidfile $pidfile
+
+include ../conf/types.conf
+EOF
+
+# Start muhttpd
+printf 'starting muhttpd...'
+../muhttpd -c test.conf
+if [ $? -ne 0 ]; then
+    error "error starting muhttpd"
+    finish
+fi
+
+if [ -f "$pidfile" ]
+then
+    muhttpd_pid=$(cat "$pidfile")
+    if [ -z "$muhttpd_pid" ]
+    then
+	error "no pid stored in pid file"
+	finish
+    fi
+else
+    error "pid file $pidfile not created"
+    finish
+fi
+
+echo ok
+
+# Fetch index page by full URL
+printf 'index.html...'
+response=$(get /index.html)
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 200 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 200"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    header="$(header "$response")"
+    body="$(body "$response")"
+    echo "$header" | grep -q '^Content-Type: text/html'
+    if [ $? -ne 0 ]; then
+        error "Content-Type: text/html not found in header"
+        echo "Header:"
+        echo "$header"
+        break
+    fi
+    echo "$body" | diff -u webdir/index.html -
+    if [ $? -ne 0 ]; then
+        error "Response body does not match expected body"
+        break
+    fi
+    nlines="$(cat "$logfile" | wc -l)"
+    if [ "$nlines" -ne 1 ]; then
+        error "expected 1 line in logfile, but found $nlines"
+        break
+    fi
+    cat "$logfile" | grep -q -E '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}	[^	]+	GET /index.html$'
+    if [ $? -ne 0 ]; then
+        error "expected line not found in logfile"
+        cat "$logfile"
+        break
+    fi
+    echo "ok"
+    break
+done
+
+# Page that does not exist
+printf 'nonexisting...'
+response=$(get /nothere.html)
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 404 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 404"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+# Report result
+finish
