@@ -131,11 +131,16 @@ static int sanitize_path(const char *filename, int n) {
 }
 
 /** Decode URL to filename */
-static char *decode_url(const char *url, char *filename, size_t len) {
-	int n = 0, m = 0;
+static char *decode_url(
+	const char *url,
+	char *filename,
+	size_t filename_len)
+{
+	size_t url_index = 0;
+	size_t filename_index = 0;
 	char c, k;
 
-	while((c = url[n])) {
+	while((c = url[url_index])) {
 		/* Question mark marks the end of the path and the beginning
 		 * of the query string. */
 		if(c == '?') break;
@@ -145,12 +150,12 @@ static char *decode_url(const char *url, char *filename, size_t len) {
 			c = ' ';
 		} else if(c == '%') {
 			/* Decode first hexit */
-			k = url[++n];
+			k = url[++url_index];
 			if('0' <= k && k <= '9') c = k - '0';
 			else c = (k & ~32) - '7';
 			c = c << 4;
 			/* Decode second hexit */
-			k = url[++n];
+			k = url[++url_index];
 			if('0' <= k && k <= '9') c |= k - '0';
 			else c |= (k & ~32) - '7';
 		}
@@ -160,40 +165,43 @@ static char *decode_url(const char *url, char *filename, size_t len) {
 			/* No special processing needed if this is the
 			 * first character in filename.
 			 */
-			if(m) {
+			if(filename_index) {
 				/* If filename already ends in a slash,
 				 * overwrite that one with the present one.
 				 */
-				if(filename[m - 1] == '/') m--;
+				if(filename[filename_index - 1] == '/') {
+					filename_index--;
+			  	}
 				else {
 					/* We have completed reading a
 					 * path component. Sanitive
 					 * filename before adding
 					 * directory separator.
 					 */
-					m = sanitize_path(filename, m);
+					filename_index = sanitize_path(
+						filename, filename_index);
 				}
 			}
 		}
 
 		/* Add character to filename, increase indices. */
-		filename[m] = c;
-		n++;
-		m++;
+		filename[filename_index] = c;
+		url_index++;
+		filename_index++;
 
-		if(m >= len) {
+		if(filename_index >= filename_len) {
 			errno = ENAMETOOLONG;
 			return NULL;
 		}
 	}
 
 	/* If filename doesn't end in a slash, it still needs sanitizing. */
-	if(m && filename[m - 1] != '/') {
-		m = sanitize_path(filename, m);
+	if(filename_index && filename[filename_index - 1] != '/') {
+		filename_index = sanitize_path(filename, filename_index);
 	}
 
 	/* Add terminating NUL byte and return filename. */
-	filename[m] = 0;
+	filename[filename_index] = 0;
 	return filename;
 }
 
