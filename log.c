@@ -18,7 +18,7 @@ void log_request(const struct request *req) {
 		fprintf(current_config->logfile,
 			"%d-%.2d-%.2d %.2d:%.2d:%.2d\t"
 			"%s\t%s %s\n",
-			tm->tm_year + 1900, tm->tm_mon, tm->tm_mday,
+			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 			tm->tm_hour, tm->tm_min, tm->tm_sec,
 			inet_ntoa(req->remote_addr.sin_addr),
 			req->method, req->uri);	
