@@ -35,11 +35,6 @@ static void internal_server_error(struct request *req) {
 void invoke_handler(const char *handler, struct request *req) {
 	char *p, *q, *r, *s, *t;
 
-#ifdef ENABLE_LOGGING
-	if(current_config->logfile) log_request(req);
-	fflush(current_config->logfile);
-#endif
-
 	/* Set environment variables */
 	setenv("SERVER_PROTOCOL", req->proto, 1);
 	setenv("REQUEST_METHOD", req->method, 1);
