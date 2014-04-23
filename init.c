@@ -32,9 +32,15 @@ static void sighandler(int num) {
 	exit(EXIT_FAILURE);
 }
 
-/* Wait for a died child process */
+/* Used to clean up exited child processes. */
 static void sigchldhandler(int num) {
-	wait(NULL);
+	/* SIGCHLD may be raised for reasons other than child processes having
+	   exited. Also, the behavior of signals being raised while their
+	   signal handler is being executed is historically ill-defined. To
+	   make sure we handle all exited processes, we use waitpid in a loop
+	   with WNOHANG. */
+	signal(SIGCHLD, sigchldhandler);
+	while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
 void init(int argc, char **argv) {
