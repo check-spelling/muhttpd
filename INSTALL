@@ -56,7 +56,8 @@ The configure script accepts the following options:
 
 --disable-<feature>
 	Do not include <feature>. <feature> can be one of background, cgi,
-	handlers, logging, mime, pidfile, and setuid. handlers requires mime.
+	handlers, logging, mime, pidfile, ssl, and setuid. handlers requires
+	mime.
 
 --enable-<feature>
 	Include <feature>. See --disable-<feature> for more info.
