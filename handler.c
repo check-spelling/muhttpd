@@ -79,7 +79,7 @@ void invoke_handler(const char *handler, struct request *req) {
 				internal_server_error(req);
 				exit(EXIT_FAILURE);
 			}
-			strncpy(s, "HTTP_", 5);
+			memcpy(s, "HTTP_", 5);
 			strncpy(s + 5, p, (size_t) (r - p));
 			s[r - p + 5] = 0;
 			/* Transform variable name */
