@@ -140,6 +140,42 @@ while true; do
     break
 done
 
+# Fetch index page by directory
+printf 'index...'
+response=$(get /)
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 200 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 200"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    header="$(header "$response")"
+    body="$(body "$response")"
+    echo "$header" | grep -q '^Content-Type: text/html'
+    if [ $? -ne 0 ]; then
+        error "Content-Type: text/html not found in header"
+        echo "Header:"
+        echo "$header"
+        break
+    fi
+    echo "$body" | diff -u webdir/index.html -
+    if [ $? -ne 0 ]; then
+        error "Response body does not match expected body"
+        break
+    fi
+    tail -n 1 "$logfile" | \
+        grep -q -E '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}	[^	]+	GET /$'
+    if [ $? -ne 0 ]; then
+        error "expected line not found in logfile"
+        cat "$logfile"
+        break
+    fi
+    echo "ok"
+    break
+done
+
 # Page that does not exist
 printf 'nonexisting...'
 response=$(get /nothere.html)
@@ -149,6 +185,41 @@ while true; do
         error "did not get expected status 404"
         echo "status line was: "
         echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+# Fetch index page by directory
+printf 'index.cgi...'
+response=$(get /a/)
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 200 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 200"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    header="$(header "$response")"
+    body="$(body "$response")"
+    echo "$header" | grep -q '^Content-Type: text/plain'
+    if [ $? -ne 0 ]; then
+        error "Content-Type: text/plain not found in header"
+        echo "Header:"
+        echo "$header"
+        break
+    fi
+    if [ "$body" != 'Hello!' ]; then
+        error "Response body does not match expected body"
+        break
+    fi
+    tail -n 1 "$logfile" | \
+        grep -q -E '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}	[^	]+	GET /a/$'
+    if [ $? -ne 0 ]; then
+        error "expected line not found in logfile"
+        cat "$logfile"
         break
     fi
     echo "ok"
