@@ -226,5 +226,36 @@ while true; do
     break
 done
 
+# Check that we cannot trivially escape from the webdir.
+printf 'baddotdot...'
+response=$(get /../test.conf)
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 404 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 404"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+# Check that we cannot escape from the webdir using
+# urlencoded dotdot, either.
+printf 'baddotdotenc...'
+response=$(get /%2E%2E/test.conf)
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 404 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 404"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
 # Report result
 finish
