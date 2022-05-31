@@ -174,7 +174,7 @@ static char *decode_url(
 			  	}
 				else {
 					/* We have completed reading a
-					 * path component. Sanitive
+					 * path component. Sanitize
 					 * filename before adding
 					 * directory separator.
 					 */
@@ -285,6 +285,17 @@ void handle_request(struct request *req) {
 	/* If status != 200 and no filename, send status message */
 	if(req->status != HTTP_200 && !req->filename) {
 		send_status_message(req);
+		return;
+	}
+
+	/* Besides the URIs starting in '/' that muhttpd supports,
+	 * RFC 2616 also specifies a number of other possibilities.
+	 * Muhttpd does not support those, so return 501 Not Implemented
+	 * if the request URI does not start in '/'. */
+	if(req->uri[0] != '/') {
+		req->filename = message_file[HTTP_501];
+		req->status = HTTP_501;
+		handle_request(req);
 		return;
 	}
 

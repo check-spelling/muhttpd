@@ -257,5 +257,54 @@ while true; do
     break
 done
 
+# Check that specifying an absolute URI generates a 501 response.
+printf 'unsupporteduri...'
+response=$(get fakescheme://localhost/)
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 501 Not Implemented"
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 501"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+abstestconf="$(realpath test.conf)"
+# Check that we cannot escape from the webdir using a slash as the second
+# character to refer to the root directory.
+printf 'noslashslashtoroot...'
+response=$(get /"$abstestconf")
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 404 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 404"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+# Check that we cannot escape from the webdir using a slash as the second
+# character to refer to the root directory and a different character as
+# the first.
+printf 'noslashtoroot...'
+response=$(get a"$abstestconf")
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 501 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 501"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
 # Report result
 finish
