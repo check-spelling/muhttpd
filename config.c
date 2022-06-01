@@ -541,6 +541,7 @@ struct muhttpd_config *read_config_file(const char *file,
 	/* Read configuration file line by line */
 	while(!feof(fp)) {
 		if(!fgets(line, MAX_LINE_LENGTH, fp)) break;
+                if (line[0] == 0) continue;
 		/* Check if we got a newline or EOF at the end */
 		if(line[strlen(line) - 1] != '\n' && !feof(fp)) {
 			fprintf(stderr, "WARNING: Line too long in %s\n",
