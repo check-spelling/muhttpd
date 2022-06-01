@@ -68,8 +68,8 @@ static int read_request(char *buf, size_t len) {
 		buf[++m] = 0; /* NUL-terminate request */
 
 		/* If we got an empty line, we're done */
-		if(!strcmp(&buf[m - 4], "\r\n\r\n") ||
-			!strcmp(&buf[m - 2], "\n\n")) break;
+		if (m > 4 && !memcmp(&buf[m - 4], "\r\n\r\n", 4)) break;
+		else if (m > 2 && !memcmp(&buf[m - 2], "\n\n", 2)) break;
 
 	} /* loop until full request received */
 	return 0;
