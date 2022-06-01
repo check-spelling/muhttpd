@@ -15,7 +15,7 @@ struct request {
 	struct sockaddr_in remote_addr;
 };
 
-void do_request();
+void do_request(struct sockaddr *addr, socklen_t salen);
 void handle_request(struct request *req);
 void handle_and_log_request(struct request *req);
 
