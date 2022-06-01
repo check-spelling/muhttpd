@@ -32,6 +32,14 @@
 
 #define new(T) (T*) malloc(sizeof(T))
 
+#define HTTP_ERROR(X)					\
+	do {						\
+		req->filename = message_file[X];	\
+		req->status = X;			\
+		handle_request(req);			\
+		return;					\
+	} while (0)
+
 /** Read request */
 static int read_request(char *buf, size_t len) {
 	int r;
@@ -207,56 +215,47 @@ static char *decode_url(
 
 void do_request(struct sockaddr *addr, socklen_t salen) {
 	char buf[BUFSIZE], *p;
-	struct request req;
+	struct request req_, *req = &req_;
 	int n;
 
-	memset(&req, 0, sizeof(req));
+	memset(&req_, 0, sizeof(req_));
 
 	/* Set remote address */
-	memcpy(&(req.remote_addr), addr, salen);
+	memcpy(&(req->remote_addr), addr, salen);
 
 	n = read_request(buf, BUFSIZE);
 	if(n) {
 		/* Error reading request */
 		if(n != HTTP_408) perror("read_request");
 		else fputs("Timeout while waiting for request\n", stderr);
-		req.filename = message_file[n];
-		req.uri = message[n];
-		req.status = n;
-		handle_and_log_request(&req);
-		return;
+		HTTP_ERROR(n);
 	}
 
 	/* Set request method */
 	p = strchr(buf, ' ');
 	if(!p) {
-		req.filename = message_file[HTTP_400];
-		req.status = HTTP_400;
-		handle_and_log_request(&req);
-		exit(EXIT_FAILURE);
+		HTTP_ERROR(HTTP_400);
 	}
 	*p = 0;
-	req.method = buf;
+	req->method = buf;
 
 	/* See if method is one of the understood types */
-	if(strcmp(req.method, "GET")
-		&& strcmp(req.method, "POST")) {
-
+	if(strcmp(req->method, "GET")
+		&& strcmp(req->method, "POST")) {
 		/* Method not implemented */
-		req.filename = message_file[HTTP_501];
-		req.status = HTTP_501;
+		HTTP_ERROR(HTTP_501);
 	}
 
 	/* Set request URI */
-	req.uri = p + 1;
-	p = strpbrk(req.uri, " \r\n");
+	req->uri = p + 1;
+	p = strpbrk(req->uri, " \r\n");
 
 	/* Detect protocol version */
-	if(*p != ' ') req.proto = "HTTP/0.9";
+	if(*p != ' ') req->proto = "HTTP/0.9";
 	else {
 		*p = 0;
-		req.proto = p + 1;
-		p = strpbrk(req.proto, "\r\n");
+		req->proto = p + 1;
+		p = strpbrk(req->proto, "\r\n");
 	}
 
 	/* Zero *p, move p past end of line */
@@ -267,13 +266,13 @@ void do_request(struct sockaddr *addr, socklen_t salen) {
 	} else *(p - 1) = 0;
 
 	/* Pass request buffer to helper functions */
-	req.buf = p;
+	req->buf = p;
 
 	/* Set status code */
-	req.status = HTTP_200;
+	req->status = HTTP_200;
 
 	/* Handle request */
-	handle_and_log_request(&req);
+	handle_and_log_request(req);
 }
 
 void handle_request(struct request *req) {
@@ -293,19 +292,13 @@ void handle_request(struct request *req) {
 	 * Muhttpd does not support those, so return 501 Not Implemented
 	 * if the request URI does not start in '/'. */
 	if(req->uri[0] != '/') {
-		req->filename = message_file[HTTP_501];
-		req->status = HTTP_501;
-		handle_request(req);
-		return;
+		HTTP_ERROR(HTTP_501);
 	}
 
 	/* If no filename set, decode URL into filename */
 	if(!req->filename) {
 		if(!decode_url(req->uri, filename, PATH_MAX)) {
-			req->filename = message_file[HTTP_414];
-			req->status = HTTP_414;
-			handle_request(req);
-			return;
+			HTTP_ERROR(HTTP_414);
 		}
 		req->filename = filename;
 	}
@@ -320,20 +313,11 @@ void handle_request(struct request *req) {
 			send_status_message(req);
 			return;
 		} else if(errno == EACCES) {
-			req->filename = message_file[HTTP_403];
-			req->status = HTTP_403;
-			handle_request(req);
-			return;
+			HTTP_ERROR(HTTP_403);
 		} else if(errno == ENOENT) {
-			req->filename = message_file[HTTP_404];
-			req->status = HTTP_404;
-			handle_request(req);
-			return;
+			HTTP_ERROR(HTTP_404);
 		} else {
-			req->filename = message_file[HTTP_500];
-			req->status = HTTP_500;
-			handle_request(req);
-			return;
+			HTTP_ERROR(HTTP_500);
 		}
 	}
 
@@ -344,10 +328,7 @@ void handle_request(struct request *req) {
 			/* Allocate memory for sprintf */
 			req->location = malloc(strlen(req->uri) + 2);
 			if(!req->location) {
-				req->status = HTTP_500;
-				req->filename = message_file[HTTP_500];
-				handle_request(req);
-				return;
+				HTTP_ERROR(HTTP_500);
 			}
 			p = strchr(req->uri, '?');
 			if(p) {
@@ -360,10 +341,7 @@ void handle_request(struct request *req) {
 				sprintf(req->location, "%s/", req->uri);
 				/*@=bufferoverflowhigh@*/
 			}
-			req->status = HTTP_301;
-			req->filename = message_file[HTTP_301];
-			handle_request(req);
-			return;
+			HTTP_ERROR(HTTP_301);
 		} else {
 			/* Send index file */
 			for(i = 0; i < config->indices; i++) {
@@ -371,10 +349,7 @@ void handle_request(struct request *req) {
 				p = malloc(strlen(req->filename)
 					+ strlen(config->index[i]) + 1);
 				if(!p) {
-					req->status = HTTP_500;
-					req->filename = message_file[HTTP_500];
-					handle_request(req);
-					return;
+					HTTP_ERROR(HTTP_500);
 				}
 				/*@-bufferoverflowhigh@*/
 				sprintf(p, "%s%s", req->filename,
@@ -393,10 +368,7 @@ void handle_request(struct request *req) {
 
 	if(!S_ISREG(stats.st_mode)) {
 		/* Refuse to serve special files */
-		req->filename = message_file[HTTP_403];
-		req->status = HTTP_403;
-		handle_request(req);
-		return;
+		HTTP_ERROR(HTTP_403);
 	}
 
 #ifndef DISABLE_MIME
@@ -431,15 +403,9 @@ void handle_request(struct request *req) {
 			send_status_message(req);
 			return;
 		} else if(errno == EACCES) {
-			req->filename = message_file[HTTP_403];
-			req->status = HTTP_403;
-			handle_request(req);
-			return;
+			HTTP_ERROR(HTTP_403);
 		} else {
-			req->filename = message_file[HTTP_500];
-			req->status = HTTP_500;
-			handle_request(req);
-			return;
+			HTTP_ERROR(HTTP_403);
 		}
 	}
 
