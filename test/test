@@ -306,5 +306,35 @@ while true; do
     break
 done
 
+# Check that we reject requests with embedded NULs before line end.
+printf 'rejectnul...'
+response="$(printf 'GET /\0 HTTP/1.0\r\n\r\n' | nc localhost $port)"
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 400 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 400"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+# Check that we reject requests with embedded NULs before line end.
+printf 'rejectspacenul...'
+response="$(printf 'GET / \0HTTP/1.0\r\n\r\n' | nc localhost $port)"
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 400 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 400"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
 # Report result
 finish

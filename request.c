@@ -249,6 +249,10 @@ void do_request(struct sockaddr *addr, socklen_t salen) {
 	/* Set request URI */
 	req->uri = p + 1;
 	p = strpbrk(req->uri, " \r\n");
+	if (!p) {
+		/* NUL in request line. Reject request. */
+		HTTP_ERROR(HTTP_400);
+	}
 
 	/* Detect protocol version */
 	if(*p != ' ') req->proto = "HTTP/0.9";
@@ -256,6 +260,10 @@ void do_request(struct sockaddr *addr, socklen_t salen) {
 		*p = 0;
 		req->proto = p + 1;
 		p = strpbrk(req->proto, "\r\n");
+		if (!p) {
+			/* NUL in request line. Reject request. */
+			HTTP_ERROR(HTTP_400);
+		}
 	}
 
 	/* Zero *p, move p past end of line */
