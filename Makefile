@@ -67,16 +67,13 @@ install-log :
 
 install-man :
 	if [ ! "$(PACKAGEDIR)/man" = "$(MANDIR)" ]; then \
- 		[ -d "$(MANDIR)/man5" ] || mkdir -p "$(MANDIR)/man5"; \
+		[ -d "$(MANDIR)/man5" ] || mkdir -p "$(MANDIR)/man5"; \
 		ln -sf "$(TRUEPACKAGEDIR)/man/man5/muhttpd.conf.5" \
 			"$(MANDIR)/man5/"; \
- 		[ -d "$(MANDIR)/man8" ] || mkdir -p "$(MANDIR)/man8"; \
+		[ -d "$(MANDIR)/man8" ] || mkdir -p "$(MANDIR)/man8"; \
 		ln -sf "$(TRUEPACKAGEDIR)/man/man8/muhttpd.8" \
 			"$(MANDIR)/man8/"; \
-  	fi
-	
-love :
-	#unzip; strip; touch; finger; mount; fsck; more; yes; umount; sleep
+	fi
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
