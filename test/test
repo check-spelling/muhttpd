@@ -336,5 +336,105 @@ while true; do
     break
 done
 
+# Check that invalid percent encodings are rejected.
+printf 'rejectpctlt0...'
+response="$(get /%4/)"
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 400 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 400"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+printf 'rejectpctgt9...'
+response="$(get /%4:)"
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 400 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 400"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+printf 'rejectpctlta...'
+response="$(get /%\`4/)"
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 400 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 400"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+printf 'rejectpctgtf...'
+response="$(get /%3g)"
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 400 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 400"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+printf 'rejectpctgtF...'
+response="$(get /%5G)"
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 400 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 400"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+printf 'rejectpctltA...'
+response="$(get /%4@/)"
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 400 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 400"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
+# Check that truncated percent encoding is rejected.
+printf 'rejectshortpct...'
+response="$(printf 'GET /%%6\r\n\r\n' | nc localhost $port)"
+while true; do
+    echo "$response" | head -n 1 | grep -q "^HTTP/1.1 400 "
+    if [ $? -ne 0 ]; then
+        error "did not get expected status 400"
+        echo "status line was: "
+        echo "$response" | head -n 1
+        break
+    fi
+    echo "ok"
+    break
+done
+
 # Report result
 finish

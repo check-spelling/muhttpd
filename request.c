@@ -40,6 +40,17 @@
 		return;					\
 	} while (0)
 
+/** Decodes a single hexadecimal digit.
+ * @return the digit's value [0, 15], or -1 if not a valid hexadecimal digit
+ */
+static int fromhex(unsigned char c) {
+	c -= '0';		/* ['0', '9'] -> [0, 9] */
+	if (c < 10) return c;
+	c = (c | 32) - 49;	/* ['A', 'F'] -> ['a', 'f'] -> [0, 5] */
+	if (c < 6) return c + 10; /* [0, 5] -> [10, 15] */
+	return -1;
+}
+
 /** Read request */
 static int read_request(char *buf, size_t len) {
 	int r;
@@ -138,15 +149,18 @@ static int sanitize_path(const char *filename, int n) {
 	return n;
 }
 
-/** Decode URL to filename */
-static char *decode_url(
+/** Decode URL to filename
+ * @return 0 on success, an HTTP status code on error.
+ */
+static int decode_url(
 	const char *url,
 	char *filename,
 	size_t filename_len)
 {
 	size_t url_index = 0;
 	size_t filename_index = 0;
-	char c, k;
+	char c;
+	int n;
 
 	while((c = url[url_index])) {
 		/* Question mark marks the end of the path and the beginning
@@ -158,14 +172,13 @@ static char *decode_url(
 			c = ' ';
 		} else if(c == '%') {
 			/* Decode first hexit */
-			k = url[++url_index];
-			if('0' <= k && k <= '9') c = k - '0';
-			else c = (k & ~32) - '7';
-			c = c << 4;
+			n = fromhex(url[++url_index]);
+			if (n < 0) return HTTP_400;
+			c = n << 4;
 			/* Decode second hexit */
-			k = url[++url_index];
-			if('0' <= k && k <= '9') c |= k - '0';
-			else c |= (k & ~32) - '7';
+			n = fromhex(url[++url_index]);
+			if (n < 0) return HTTP_400;
+			c |= n;
 		}
 
 		/* Directory separator */
@@ -199,7 +212,7 @@ static char *decode_url(
 
 		if(filename_index >= filename_len) {
 			errno = ENAMETOOLONG;
-			return NULL;
+			return HTTP_414;
 		}
 	}
 
@@ -210,7 +223,7 @@ static char *decode_url(
 
 	/* Add terminating NUL byte and return filename. */
 	filename[filename_index] = 0;
-	return filename;
+	return 0;
 }
 
 void do_request(struct sockaddr *addr, socklen_t salen) {
@@ -305,8 +318,9 @@ void handle_request(struct request *req) {
 
 	/* If no filename set, decode URL into filename */
 	if(!req->filename) {
-		if(!decode_url(req->uri, filename, PATH_MAX)) {
-			HTTP_ERROR(HTTP_414);
+		n = decode_url(req->uri, filename, PATH_MAX);
+		if (n) {
+			HTTP_ERROR(n);
 		}
 		req->filename = filename;
 	}
