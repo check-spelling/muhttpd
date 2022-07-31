@@ -1,6 +1,6 @@
 Introduction
 
-muhttpd (mu HTTP deamon) is a simple but versatile web server written in 
+muhttpd (mu HTTP daemon) is a simple but versatile web server written in 
 portable ANSI C. It supports static pages, CGI scripts, and MIME type 
 based handlers. It drops privileges before accepting any connections, and 
 it can log received requests. Development emphasis is on simplicity, 
