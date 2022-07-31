@@ -43,7 +43,7 @@ int ssl_set_key_file(SSL_CTX *ctx, const char *keyfile) {
 	return 0;
 }
 
-/** Print errors that occured in the SSL code. */
+/** Print errors that occurred in the SSL code. */
 void ssl_perror(const char *prefix) {
 	SSL_load_error_strings();
 	fprintf(stderr, "%s: ", prefix);
